@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{pageTitle}} - Database Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: #343a40;
+        }
+        .sidebar .nav-link {
+            color: #adb5bd;
+        }
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: #fff;
+            background: #495057;
+        }
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .progress-circle {
+            position: relative;
+            width: 60px;
+            height: 60px;
+        }
+        .activity-item {
+            border-left: 3px solid #007bff;
+            padding-left: 15px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 px-0">
+                <div class="sidebar">
+                    <div class="p-3">
+                        <h4 class="text-white">
+                            <i class="fas fa-database"></i> DB Admin
+                        </h4>
+                    </div>
+                    <nav class="nav flex-column">
+                        <a class="nav-link" href="/admin/database">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                        <a class="nav-link active" href="/admin/database/users">
+                            <i class="fas fa-users"></i> Users
+                        </a>
+                        <a class="nav-link" href="/admin/database/courses">
+                            <i class="fas fa-book"></i> Courses
+                        </a>
+                        <a class="nav-link" href="/admin/database/modules">
+                            <i class="fas fa-list"></i> Modules
+                        </a>
+                        <a class="nav-link" href="/admin/database/purchases">
+                            <i class="fas fa-shopping-cart"></i> Purchases
+                        </a>
+                        <a class="nav-link" href="/admin/database/progress">
+                            <i class="fas fa-chart-line"></i> Progress
+                        </a>
+                        <hr class="my-3">
+                        <a class="nav-link" href="/login">
+                            <i class="fas fa-home"></i> Back to Grocademy
+                        </a>
+                        <a class="nav-link" href="/docs">
+                            <i class="fas fa-book"></i> API Documentation
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-10">
+                <div class="p-4">
+                    {{#if error}}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> {{error}}
+                    </div>
+                    {{else}}
+                    
+                    <!-- Page Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="d-flex align-items-center">
+                            <a href="/admin/database/users" class="btn btn-outline-secondary me-3">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </a>
+                            <h1><i class="fas fa-user"></i> {{user.username}}</h1>
+                        </div>
+                        <div>
+                            {{#if user.is_admin}}
+                            <span class="badge bg-danger fs-6">
+                                <i class="fas fa-crown"></i> Admin
+                            </span>
+                            {{else}}
+                            <span class="badge bg-success fs-6">
+                                <i class="fas fa-user"></i> User
+                            </span>
+                            {{/if}}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- User Info Card -->
+                        <div class="col-md-4 mb-4">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <div class="user-avatar rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-user fa-3x text-white"></i>
+                                    </div>
+                                    <h4>{{user.first_name}} {{user.last_name}}</h4>
+                                    <p class="text-muted">@{{user.username}}</p>
+                                    <p class="text-muted">{{user.email}}</p>
+                                    <hr>
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <div class="h4 text-primary mb-0">{{stats.totalPurchases}}</div>
+                                            <small class="text-muted">Courses</small>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="h4 text-success mb-0">{{stats.totalProgress}}</div>
+                                            <small class="text-muted">Completed</small>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="h4 text-info mb-0">${{stats.totalSpent}}</div>
+                                            <small class="text-muted">Spent</small>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar"></i> 
+                                        Joined {{formatDate user.created_at 'MMM DD, YYYY'}}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Course Progress -->
+                        <div class="col-md-8 mb-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-chart-pie"></i> Course Progress</h5>
+                                </div>
+                                <div class="card-body">
+                                    {{#if courseProgress}}
+                                    {{#each courseProgress}}
+                                    <div class="d-flex align-items-center mb-3 p-3 bg-light rounded">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">{{this.course.title}}</h6>
+                                            <div class="progress" style="height: 8px;">
+                                                <div class="progress-bar" role="progressbar" 
+                                                     style="width: {{this.percentage}}%;" 
+                                                     aria-valuenow="{{this.percentage}}" 
+                                                     aria-valuemin="0" aria-valuemax="100">
+                                                </div>
+                                            </div>
+                                            <small class="text-muted">
+                                                {{this.completedModules}} of {{this.totalModules}} modules completed
+                                            </small>
+                                        </div>
+                                        <div class="text-center ms-3">
+                                            <div class="h5 text-primary mb-0">{{this.percentage}}%</div>
+                                            <small class="text-muted">Complete</small>
+                                        </div>
+                                    </div>
+                                    {{/each}}
+                                    {{else}}
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-chart-pie fa-2x text-muted mb-3"></i>
+                                        <p class="text-muted">No course progress yet</p>
+                                    </div>
+                                    {{/if}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Purchased Courses -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-shopping-cart"></i> Purchased Courses</h5>
+                                </div>
+                                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                                    {{#if purchases}}
+                                    {{#each purchases}}
+                                    <div class="activity-item mb-3">
+                                        <h6 class="mb-1">{{this.course.title}}</h6>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="badge bg-success">${{this.course.price}}</span>
+                                            <small class="text-muted">
+                                                {{formatDate this.purchased_at 'MMM DD, YYYY'}}
+                                            </small>
+                                        </div>
+                                        <p class="text-muted small mb-0 mt-1">{{this.course.description}}</p>
+                                    </div>
+                                    {{/each}}
+                                    {{else}}
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-shopping-cart fa-2x text-muted mb-3"></i>
+                                        <p class="text-muted">No purchases yet</p>
+                                    </div>
+                                    {{/if}}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Learning Activity -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-check-circle"></i> Recent Activity</h5>
+                                </div>
+                                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                                    {{#if progress}}
+                                    {{#each progress}}
+                                    <div class="activity-item mb-3">
+                                        <h6 class="mb-1">{{this.module.title}}</h6>
+                                        <small class="text-success">Completed</small>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-primary">{{this.module.course.title}}</small>
+                                            <small class="text-muted">
+                                                {{formatDate this.completed_at 'MMM DD, YYYY'}}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    {{/each}}
+                                    {{else}}
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-check-circle fa-2x text-muted mb-3"></i>
+                                        <p class="text-muted">No learning activity yet</p>
+                                    </div>
+                                    {{/if}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

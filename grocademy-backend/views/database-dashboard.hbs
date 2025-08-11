@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{pageTitle}} - Database Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: #343a40;
+        }
+        .sidebar .nav-link {
+            color: #adb5bd;
+        }
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: #fff;
+            background: #495057;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+        }
+        .stat-card .stat-icon {
+            font-size: 2rem;
+            opacity: 0.8;
+        }
+        .table-actions .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        .badge-admin {
+            background-color: #dc3545;
+        }
+        .badge-user {
+            background-color: #28a745;
+        }
+        .recent-activity {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 px-0">
+                <div class="sidebar">
+                    <div class="p-3">
+                        <h4 class="text-white">
+                            <i class="fas fa-database"></i> DB Admin
+                        </h4>
+                    </div>
+                    <nav class="nav flex-column">
+                        <a class="nav-link {{#if (eq currentPage 'database-dashboard')}}active{{/if}}" 
+                           href="/admin/database">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                        <a class="nav-link {{#if (eq currentPage 'database-users')}}active{{/if}}" 
+                           href="/admin/database/users">
+                            <i class="fas fa-users"></i> Users
+                        </a>
+                        <a class="nav-link {{#if (eq currentPage 'database-courses')}}active{{/if}}" 
+                           href="/admin/database/courses">
+                            <i class="fas fa-book"></i> Courses
+                        </a>
+                        <a class="nav-link {{#if (eq currentPage 'database-modules')}}active{{/if}}" 
+                           href="/admin/database/modules">
+                            <i class="fas fa-list"></i> Modules
+                        </a>
+                        <a class="nav-link {{#if (eq currentPage 'database-purchases')}}active{{/if}}" 
+                           href="/admin/database/purchases">
+                            <i class="fas fa-shopping-cart"></i> Purchases
+                        </a>
+                        <a class="nav-link {{#if (eq currentPage 'database-progress')}}active{{/if}}" 
+                           href="/admin/database/progress">
+                            <i class="fas fa-chart-line"></i> Progress
+                        </a>
+                        <hr class="my-3">
+                        <a class="nav-link" href="/login">
+                            <i class="fas fa-home"></i> Back to Grocademy
+                        </a>
+                        <a class="nav-link" href="/docs">
+                            <i class="fas fa-book"></i> API Documentation
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-10">
+                <div class="p-4">
+                    {{#if error}}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> {{error}}
+                    </div>
+                    {{else}}
+                    
+                    <!-- Dashboard Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h1><i class="fas fa-tachometer-alt"></i> Database Dashboard</h1>
+                        <div class="text-muted">
+                            <i class="fas fa-clock"></i> Last updated: Now
+                        </div>
+                    </div>
+
+                    <!-- Statistics Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-2">
+                            <div class="card stat-card text-center p-3">
+                                <div class="stat-icon mb-2">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <h3 class="mb-0">{{stats.userCount}}</h3>
+                                <small>Total Users</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card stat-card text-center p-3">
+                                <div class="stat-icon mb-2">
+                                    <i class="fas fa-book"></i>
+                                </div>
+                                <h3 class="mb-0">{{stats.courseCount}}</h3>
+                                <small>Total Courses</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card stat-card text-center p-3">
+                                <div class="stat-icon mb-2">
+                                    <i class="fas fa-list"></i>
+                                </div>
+                                <h3 class="mb-0">{{stats.moduleCount}}</h3>
+                                <small>Total Modules</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card stat-card text-center p-3">
+                                <div class="stat-icon mb-2">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <h3 class="mb-0">{{stats.purchaseCount}}</h3>
+                                <small>Total Purchases</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card stat-card text-center p-3">
+                                <div class="stat-icon mb-2">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <h3 class="mb-0">{{stats.progressCount}}</h3>
+                                <small>Progress Records</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card stat-card text-center p-3">
+                                <div class="stat-icon mb-2">
+                                    <i class="fas fa-user-shield"></i>
+                                </div>
+                                <h3 class="mb-0">{{stats.adminCount}}</h3>
+                                <small>Admin Users</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity Section -->
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-user-plus"></i> Recent Users</h5>
+                                </div>
+                                <div class="card-body recent-activity">
+                                    {{#if recentUsers}}
+                                    {{#each recentUsers}}
+                                    <div class="d-flex align-items-center mb-2 p-2 bg-light rounded">
+                                        <div class="flex-grow-1">
+                                            <strong>{{this.username}}</strong>
+                                            {{#if this.is_admin}}
+                                            <span class="badge badge-admin">Admin</span>
+                                            {{else}}
+                                            <span class="badge badge-user">User</span>
+                                            {{/if}}
+                                            <br>
+                                            <small class="text-muted">{{this.email}}</small>
+                                        </div>
+                                        <small class="text-muted">
+                                            {{formatDate this.created_at 'MMM DD'}}
+                                        </small>
+                                    </div>
+                                    {{/each}}
+                                    {{else}}
+                                    <p class="text-muted">No recent users</p>
+                                    {{/if}}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-shopping-cart"></i> Recent Purchases</h5>
+                                </div>
+                                <div class="card-body recent-activity">
+                                    {{#if recentPurchases}}
+                                    {{#each recentPurchases}}
+                                    <div class="d-flex align-items-center mb-2 p-2 bg-light rounded">
+                                        <div class="flex-grow-1">
+                                            <strong>{{this.user.username}}</strong> purchased<br>
+                                            <small class="text-primary">{{this.course.title}}</small><br>
+                                            <span class="badge bg-success">${{this.course.price}}</span>
+                                        </div>
+                                        <small class="text-muted">
+                                            {{formatDate this.purchased_at 'MMM DD'}}
+                                        </small>
+                                    </div>
+                                    {{/each}}
+                                    {{else}}
+                                    <p class="text-muted">No recent purchases</p>
+                                    {{/if}}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-check-circle"></i> Recent Progress</h5>
+                                </div>
+                                <div class="card-body recent-activity">
+                                    {{#if recentProgress}}
+                                    {{#each recentProgress}}
+                                    <div class="d-flex align-items-center mb-2 p-2 bg-light rounded">
+                                        <div class="flex-grow-1">
+                                            <strong>{{this.user.username}}</strong> completed<br>
+                                            <small class="text-success">{{this.module.title}}</small><br>
+                                            <small class="text-muted">from {{this.module.course.title}}</small>
+                                        </div>
+                                        <small class="text-muted">
+                                            {{formatDate this.completed_at 'MMM DD'}}
+                                        </small>
+                                    </div>
+                                    {{/each}}
+                                    {{else}}
+                                    <p class="text-muted">No recent progress</p>
+                                    {{/if}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

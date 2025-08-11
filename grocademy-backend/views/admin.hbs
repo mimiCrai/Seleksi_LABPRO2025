@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{pageTitle}}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .admin-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .admin-card:hover {
+            transform: translateY(-5px);
+        }
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 1rem;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            color: white !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: rgba(0,0,0,0.1);">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-graduation-cap me-2"></i>
+                Grocademy Admin
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link text-white" href="/">
+                    <i class="fas fa-home"></i> Home
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        {{#if error}}
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="alert alert-danger text-center">
+                    <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                    <h4>Access Denied</h4>
+                    <p>{{error}}</p>
+                    <a href="/login" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Go to Login
+                    </a>
+                </div>
+            </div>
+        </div>
+        {{else}}
+        
+        <!-- Welcome Section -->
+        <div class="text-center text-white mb-5">
+            <h1 class="display-4">
+                <i class="fas fa-shield-alt"></i> Admin Dashboard
+            </h1>
+            <p class="lead">Manage your Grocademy platform</p>
+        </div>
+
+        <!-- Admin Features Grid -->
+        <div class="row g-4">
+            <!-- Database Management -->
+            <div class="col-md-6 col-lg-4">
+                <div class="admin-card p-4 text-center h-100">
+                    <div class="feature-icon bg-primary text-white">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h4>Database Admin Panel</h4>
+                    <p class="text-muted mb-4">Complete database management interface with search, filters, and analytics</p>
+                    <a href="/admin/database" class="btn btn-primary">
+                        <i class="fas fa-rocket"></i> Open Database UI
+                    </a>
+                </div>
+            </div>
+
+            <!-- API Documentation -->
+            <div class="col-md-6 col-lg-4">
+                <div class="admin-card p-4 text-center h-100">
+                    <div class="feature-icon bg-info text-white">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h4>API Documentation</h4>
+                    <p class="text-muted mb-4">Interactive API documentation with Swagger UI</p>
+                    <a href="/docs" class="btn btn-info">
+                        <i class="fas fa-book"></i> View API Docs
+                    </a>
+                </div>
+            </div>
+
+            <!-- Course Management -->
+            <div class="col-md-6 col-lg-4">
+                <div class="admin-card p-4 text-center h-100">
+                    <div class="feature-icon bg-success text-white">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h4>Course Management</h4>
+                    <p class="text-muted mb-4">Create, edit, and manage courses and modules</p>
+                    <a href="/browse" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Manage Courses
+                    </a>
+                </div>
+            </div>
+
+            <!-- User Analytics -->
+            <div class="col-md-6 col-lg-4">
+                <div class="admin-card p-4 text-center h-100">
+                    <div class="feature-icon bg-warning text-white">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h4>User Analytics</h4>
+                    <p class="text-muted mb-4">Track user progress, enrollments, and engagement</p>
+                    <a href="/admin/database/users" class="btn btn-warning">
+                        <i class="fas fa-users"></i> View Users
+                    </a>
+                </div>
+            </div>
+
+            <!-- Revenue Tracking -->
+            <div class="col-md-6 col-lg-4">
+                <div class="admin-card p-4 text-center h-100">
+                    <div class="feature-icon bg-danger text-white">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <h4>Revenue Tracking</h4>
+                    <p class="text-muted mb-4">Monitor course sales and revenue metrics</p>
+                    <a href="/admin/database/purchases" class="btn btn-danger">
+                        <i class="fas fa-chart-line"></i> View Sales
+                    </a>
+                </div>
+            </div>
+
+            <!-- System Health -->
+            <div class="col-md-6 col-lg-4">
+                <div class="admin-card p-4 text-center h-100">
+                    <div class="feature-icon bg-dark text-white">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <h4>System Health</h4>
+                    <p class="text-muted mb-4">Monitor system status and performance</p>
+                    <a href="/admin/database" class="btn btn-dark">
+                        <i class="fas fa-heartbeat"></i> Check Status
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="admin-card p-4">
+                    <h5 class="mb-4">
+                        <i class="fas fa-tachometer-alt"></i> Quick Access
+                    </h5>
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <a href="/admin/database" class="btn btn-outline-primary btn-lg w-100">
+                                <i class="fas fa-database d-block mb-2"></i>
+                                Database Admin
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="/docs" class="btn btn-outline-info btn-lg w-100">
+                                <i class="fas fa-book d-block mb-2"></i>
+                                API Docs
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="/admin/database/users" class="btn btn-outline-success btn-lg w-100">
+                                <i class="fas fa-users d-block mb-2"></i>
+                                Users
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="/admin/database/courses" class="btn btn-outline-warning btn-lg w-100">
+                                <i class="fas fa-graduation-cap d-block mb-2"></i>
+                                Courses
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {{/if}}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

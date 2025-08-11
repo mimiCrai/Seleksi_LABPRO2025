@@ -1,0 +1,302 @@
+{{!-- course-details.hbs - Course detail page --}}
+
+<div class="course-details">
+  {{#if error}}
+    <div class="alert alert-error">
+      <strong>Error:</strong> {{error}}
+    </div>
+  {{/if}}
+
+  {{#if course}}
+    <div class="course-header">
+      <div class="course-info">
+        <h1>{{course.title}}</h1>
+        <p class="course-instructor">by {{course.instructor}}</p>
+        <p class="course-description">{{course.description}}</p>
+        
+        {{#if course.topics}}
+          <div class="course-topics">
+            <h3>Topics Covered:</h3>
+            <ul class="topics-list">
+              {{#each course.topics}}
+                <li>{{this}}</li>
+              {{/each}}
+            </ul>
+          </div>
+        {{/if}}
+      </div>
+      
+      <div class="course-sidebar">
+        {{#if course.thumbnail_image}}
+          <img src="{{course.thumbnail_image}}" alt="{{course.title}}" class="course-image">
+        {{/if}}
+        
+        <div class="course-price">
+          <span class="price">{{course.price}} credits</span>
+        </div>
+        
+        <div class="course-stats">
+          <p><strong>Total Modules:</strong> {{course.total_modules}}</p>
+          <p><strong>Created:</strong> {{formatDate course.created_at}}</p>
+          {{#if isPurchased}}
+            {{#if course.progress_summary}}
+              <p><strong>Progress:</strong> {{course.progress_summary.completed_modules}}/{{course.progress_summary.total_modules}} modules ({{course.progress_summary.progress_percentage}}%)</p>
+            {{/if}}
+          {{/if}}
+        </div>
+
+        {{#if isPurchased}}
+          {{#if course.progress_summary.next_module_id}}
+            <a href="/modules/{{course.progress_summary.next_module_id}}" class="btn btn-primary btn-full">
+              {{#if (eq course.progress_summary.progress_percentage 0)}}
+                🎓 Start Learning
+              {{else if course.progress_summary.is_completed}}
+                🔄 Review Course
+              {{else}}
+                📖 Continue Learning
+              {{/if}}
+            </a>
+          {{else}}
+            <div class="btn btn-secondary btn-full" style="cursor: not-allowed;">
+              📚 No Modules Available
+            </div>
+          {{/if}}
+          <div class="purchase-status">
+            {{#if course.progress_summary.is_completed}}
+              🏆 Course Completed
+            {{else}}
+              ✅ Course Purchased
+            {{/if}}
+          </div>
+        {{else}}
+          <form action="/buy-course" method="POST">
+            <input type="hidden" name="courseId" value="{{course.id}}">
+            <button type="submit" class="btn btn-primary btn-full">
+              💳 Buy Course ({{course.price}} credits)
+            </button>
+          </form>
+          <p class="balance-info">Your balance: {{balance}} credits</p>
+        {{/if}}
+      </div>
+    </div>
+
+    {{#if course.modules}}
+      <div class="course-modules">
+        <h2>Course Modules</h2>
+        <div class="modules-list">
+          {{#each course.modules}}
+            <div class="module-item {{#if this.is_completed}}completed{{/if}}">
+              <div class="module-header">
+                <div class="module-info">
+                  <div class="module-number">{{add @index 1}}</div>
+                  <div class="module-details">
+                    <h3 class="module-title">{{this.title}}</h3>
+                    <p class="module-description">{{this.description}}</p>
+                  </div>
+                </div>
+                <div class="module-status">
+                  {{#if this.is_completed}}
+                    <span class="status-badge completed">✅ Completed</span>
+                  {{else if ../isPurchased}}
+                    <span class="status-badge available">📖 Available</span>
+                  {{else}}
+                    <span class="status-badge locked">🔒 Locked</span>
+                  {{/if}}
+                </div>
+              </div>
+              
+              {{#if ../isPurchased}}
+                <div class="module-actions">
+                  <a href="/modules/{{this.id}}" class="btn btn-sm btn-secondary">
+                    {{#if this.is_completed}}
+                      Review Module
+                    {{else}}
+                      Start Module
+                    {{/if}}
+                  </a>
+                </div>
+              {{/if}}
+            </div>
+          {{/each}}
+        </div>
+      </div>
+    {{/if}}
+  {{else}}
+    <div class="empty-state">
+      <h3>Course not found</h3>
+      <p>The course you're looking for doesn't exist.</p>
+      <a href="/browse" class="btn btn-primary">Browse Courses</a>
+    </div>
+  {{/if}}
+</div>
+
+<style>
+  .course-details {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .course-header {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 3rem;
+    margin-bottom: 2rem;
+  }
+
+  .course-info h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    color: #2d3748;
+  }
+
+  .course-instructor {
+    font-size: 1.2rem;
+    color: #4c51bf;
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+
+  .course-description {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #4a5568;
+    margin-bottom: 2rem;
+  }
+
+  .course-topics h3 {
+    color: #2d3748;
+    margin-bottom: 1rem;
+  }
+
+  .topics-list {
+    list-style-type: none;
+    padding: 0;
+  }
+
+  .topics-list li {
+    background: #f7fafc;
+    padding: 0.5rem 1rem;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid #4c51bf;
+    border-radius: 4px;
+  }
+
+  .course-sidebar {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    height: fit-content;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .course-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+  }
+
+  .course-price {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .price {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #4c51bf;
+  }
+
+  .course-stats {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .course-stats p {
+    margin: 0.5rem 0;
+    color: #4a5568;
+  }
+
+  .btn-full {
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+
+  .purchase-status {
+    text-align: center;
+    color: #38a169;
+    font-weight: 600;
+    padding: 0.5rem;
+    background: #f0fff4;
+    border-radius: 4px;
+  }
+
+  .balance-info {
+    text-align: center;
+    color: #4a5568;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+  }
+
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-primary {
+    background: #4c51bf;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #434190;
+    color: white;
+  }
+
+  .alert {
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+
+  .alert-error {
+    background: #fed7d7;
+    color: #9b2c2c;
+    border: 1px solid #feb2b2;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #718096;
+  }
+
+  .empty-state h3 {
+    margin: 0 0 0.5rem 0;
+    color: #4a5568;
+  }
+
+  @media (max-width: 768px) {
+    .course-header {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    
+    .course-details {
+      padding: 1rem;
+    }
+  }
+</style>

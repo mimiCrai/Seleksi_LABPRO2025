@@ -1,0 +1,30 @@
+{{#if message}}
+  <div class="alert alert-error">
+    {{message}}
+  </div>
+{{else}}
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+    <div style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; padding: 20px; border-radius: 8px; text-align: center;">
+      <h3 style="margin-bottom: 10px;">📚 Browse Courses</h3>
+      <p style="margin-bottom: 15px; opacity: 0.9;">Discover new courses to expand your skills</p>
+      <a href="/browse" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3);">
+        Explore Courses
+      </a>
+    </div>
+    
+    <div style="background: linear-gradient(135deg, #27ae60, #229954); color: white; padding: 20px; border-radius: 8px; text-align: center;">
+      <h3 style="margin-bottom: 10px;">📖 My Learning</h3>
+      <p style="margin-bottom: 15px; opacity: 0.9;">Continue your learning journey</p>
+      <a href="/my-courses" class="btn" style="background-color: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3);">
+        View My Courses
+      </a>
+    </div>
+  </div>
+  
+  <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #3498db;">
+    <h3 style="color: #2c3e50; margin-bottom: 10px;">Welcome to Grocademy! 🎓</h3>
+    <p style="color: #7f8c8d; line-height: 1.6;">
+      Your learning dashboard is ready. Explore our course catalog, track your progress, and enhance your skills with our comprehensive learning platform.
+    </p>
+  </div>
+{{/if}}

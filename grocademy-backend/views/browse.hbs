@@ -1,0 +1,323 @@
+{{!-- browse.hbs - Extends the main layout --}}
+
+{{!-- <div class="page-content"> --}}
+  {{!-- <div class="page-header">
+    <h1>Browse Courses</h1>
+    <p>Discover and purchase courses to enhance your skills</p>
+  </div> --}}
+
+  <div class="search-bar">
+    <form method="GET" action="/browse" class="search-form">
+      <input 
+        type="text" 
+        name="query" 
+        class="search-input"
+        placeholder="Search courses..." 
+        value="{{query}}"
+      />
+      <button type="submit" class="search-button">🔍 Search</button>
+    </form>
+  </div>
+  
+
+  {{#if message}}
+    <div class="alert alert-error">
+      {{message}}
+    </div>
+  {{/if}}
+
+  {{#if error}}
+    <div class="alert alert-error">
+      <strong>Error:</strong> {{error}}
+    </div>
+  {{/if}}
+
+  {{#if searchPerformed}}
+    <div class="search-results-info">
+      {{#if hasResults}}
+        <p>Found {{pagination.total_items}} course(s) for "{{query}}"</p>
+      {{else}}
+        <p>No courses found for "{{query}}". Try a different search term.</p>
+      {{/if}}
+    </div>
+  {{/if}}
+
+  {{#if courses}}
+    <div class="courses-grid">
+      {{#each courses}} 
+        <div class="course-card">
+          <div class="course-header">
+            <h3>{{this.name}}{{this.title}}</h3>
+            <div class="course-price">{{this.price}} credits</div>
+          </div>
+          
+          <div class="course-body">
+            <p class="course-description">{{this.description}}</p>
+            {{#if this.instructor}}
+              <p class="course-instructor">Instructor: {{this.instructor}}</p>
+            {{/if}}
+          </div>
+          
+          <div class="course-footer">
+            <a href="/courses/{{this.id}}" class="btn btn-secondary" style="margin-right: 10px;">
+              📋 View Details
+            </a>
+            <form action="/buy-course" method="POST" style="display: inline;">
+              <input type="hidden" name="courseId" value="{{this.id}}">
+              <button type="submit" class="btn btn-primary">
+                💳 Buy Course
+              </button>
+            </form>
+          </div>
+        </div>
+      {{/each}}
+    </div>
+
+    {{#if pagination}}
+      {{#if (gt pagination.total_pages 1)}}
+        <div class="pagination">
+          {{#if (gt pagination.current_page 1)}}
+            <a href="/browse?page={{subtract pagination.current_page 1}}{{#if query}}&query={{query}}{{/if}}" class="pagination-btn">
+              ← Previous
+            </a>
+          {{/if}}
+          
+          <span class="pagination-info">
+            Page {{pagination.current_page}} of {{pagination.total_pages}}
+          </span>
+          
+          {{#if (lt pagination.current_page pagination.total_pages)}}
+            <a href="/browse?page={{add pagination.current_page 1}}{{#if query}}&query={{query}}{{/if}}" class="pagination-btn">
+              Next →
+            </a>
+          {{/if}}
+        </div>
+      {{/if}}
+    {{/if}}
+  {{else}}
+    <div class="empty-state">
+      {{#if searchPerformed}}
+        <h3>No courses found</h3>
+        <p>No courses match your search for "{{query}}".</p>
+        <p>Try searching for different keywords or <a href="/browse">browse all courses</a>.</p>
+      {{else}}
+        <h3>No courses available</h3>
+        <p>Check back later for new courses!</p>
+      {{/if}}
+    </div>
+  {{/if}}
+{{!-- </div> --}}
+
+<style>
+  .search-bar {
+    margin-bottom: 1.5rem;
+  }
+
+  .search-form {
+    display: flex;
+    gap: 0.5rem;
+    max-width: 500px;
+  }
+
+  .search-input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #e0e4e7;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+
+  .search-input:focus {
+    outline: none;
+    border-color: #4c51bf;
+    box-shadow: 0 0 0 3px rgba(76, 81, 191, 0.1);
+  }
+
+  .search-button {
+    padding: 0.75rem 1.5rem;
+    background: #4c51bf;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+  }
+
+  .search-button:hover {
+    background: #434190;
+  }
+
+  .search-results-info {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    color: #4a5568;
+  }
+
+  .search-results-info p {
+    margin: 0;
+    font-weight: 500;
+  }
+  .courses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .course-card {
+    background: white;
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .course-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .course-header {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e0e4e7;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .course-header h3 {
+    margin: 0;
+    color: #2d3748;
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+
+  .course-price {
+    background: #4c51bf;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .course-body {
+    padding: 1rem;
+  }
+
+  .course-description {
+    margin: 0 0 0.5rem 0;
+    color: #4a5568;
+    line-height: 1.5;
+  }
+
+  .course-instructor {
+    margin: 0;
+    color: #718096;
+    font-size: 0.875rem;
+    font-style: italic;
+  }
+
+  .course-footer {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-top: 1px solid #e0e4e7;
+  }
+
+  .btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-primary {
+    background: #4c51bf;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #434190;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #718096;
+  }
+
+  .empty-state h3 {
+    margin: 0 0 0.5rem 0;
+    color: #4a5568;
+  }
+
+  .alert {
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+
+  .alert-error {
+    background: #fed7d7;
+    color: #9b2c2c;
+    border: 1px solid #feb2b2;
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding: 1rem;
+  }
+
+  .pagination-btn {
+    padding: 0.5rem 1rem;
+    background: #4c51bf;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+  }
+
+  .pagination-btn:hover {
+    background: #434190;
+    color: white;
+  }
+
+  .pagination-info {
+    color: #4a5568;
+    font-weight: 500;
+  }
+
+  .alert-error {
+    background: #fed7d7;
+    color: #9b2c2c;
+    border: 1px solid #feb2b2;
+  }
+
+  .page-header {
+    margin-bottom: 2rem;
+  }
+
+  .page-header h1 {
+    margin: 0 0 0.5rem 0;
+    color: #2d3748;
+  }
+
+  .page-header p {
+    margin: 0;
+    color: #718096;
+  }
+</style>

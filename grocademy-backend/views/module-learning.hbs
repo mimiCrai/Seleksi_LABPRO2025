@@ -1,0 +1,552 @@
+{{!-- module-learning.hbs - Individual module learning page --}}
+
+<div class="module-learning">
+  {{#if error}}
+    <div class="alert alert-error">
+      <strong>Error:</strong> {{error}}
+    </div>
+  {{/if}}
+
+  {{#if module}}
+    <div class="module-navigation">
+      <a href="/courses/{{module.course_id}}/modules" class="nav-back">
+        ← Back to Course Modules
+      </a>
+      
+      {{#if module.is_completed}}
+        <div class="completion-badge">
+          ✅ Completed
+        </div>
+      {{/if}}
+    </div>
+
+    <div class="module-header">
+      <h1>{{module.title}}</h1>
+      <p class="module-description">{{module.description}}</p>
+    </div>
+
+    <div class="module-content">
+      {{#if module.video_content}}
+        <div class="content-section video-section">
+          <h2>📹 Video Content</h2>
+          <div class="video-container">
+            <video controls class="module-video">
+              <source src="{{module.video_content}}" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+      {{/if}}
+
+      {{#if module.pdf_content}}
+        <div class="content-section pdf-section">
+          <h2>📄 Reading Material</h2>
+          <div class="pdf-container">
+            <a href="{{module.pdf_content}}" target="_blank" class="pdf-link">
+              <div class="pdf-preview">
+                <div class="pdf-icon">📄</div>
+                <div class="pdf-info">
+                  <h3>Module PDF</h3>
+                  <p>Click to open in new tab</p>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+      {{/if}}
+
+      {{#unless module.video_content}}
+        {{#unless module.pdf_content}}
+          <div class="content-section">
+            <div class="empty-content">
+              <h3>📚 Module Content</h3>
+              <p>The content for this module will be available soon.</p>
+            </div>
+          </div>
+        {{/unless}}
+      {{/unless}}
+    </div>
+
+    <div class="module-actions">
+      {{#unless module.is_completed}}
+        <button id="completeModuleBtn" class="btn btn-success btn-lg" data-module-id="{{module.id}}">
+          ✅ Mark as Complete
+        </button>
+        <p class="completion-note">
+          Complete this module to track your progress and unlock the next module.
+        </p>
+      {{else}}
+        <div class="completion-status">
+          <h3>🎉 Module Completed!</h3>
+          <p>Great job! You've successfully completed this module.</p>
+          <p class="completion-date">Completed on: {{formatDate module.completed_at}}</p>
+        </div>
+      {{/unless}}
+    </div>
+
+    <!-- Progress Modal -->
+    <div id="progressModal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>🎉 Module Completed!</h3>
+        </div>
+        <div class="modal-body">
+          <div id="progressInfo"></div>
+          <div id="certificateInfo" style="display: none;">
+            <div class="certificate-celebration">
+              <h2>🏆 Congratulations!</h2>
+              <p>You've completed the entire course!</p>
+              <a id="certificateDownload" href="#" class="btn btn-gold btn-lg" target="_blank">
+                📜 Download Certificate
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="continueBtn" class="btn btn-primary">Continue</button>
+        </div>
+      </div>
+    </div>
+  {{/if}}
+</div>
+
+<script>
+  // Module completion functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const completeBtn = document.getElementById('completeModuleBtn');
+    const progressModal = document.getElementById('progressModal');
+    const progressInfo = document.getElementById('progressInfo');
+    const certificateInfo = document.getElementById('certificateInfo');
+    const certificateDownload = document.getElementById('certificateDownload');
+    const continueBtn = document.getElementById('continueBtn');
+
+    if (completeBtn) {
+      completeBtn.addEventListener('click', async function() {
+        const moduleId = this.dataset.moduleId;
+        
+        // Disable button and show loading
+        this.disabled = true;
+        this.innerHTML = '⏳ Completing...';
+
+        try {
+          const response = await fetch(`/api/modules/${moduleId}/complete`, {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.status === 'success') {
+            // Show progress information
+            const progress = data.data.course_progress;
+            progressInfo.innerHTML = `
+              <div class="progress-update">
+                <h4>Progress Updated!</h4>
+                <div class="progress-stats">
+                  <div class="stat">
+                    <span class="stat-number">${progress.completed_modules}</span>
+                    <span class="stat-label">Completed</span>
+                  </div>
+                  <div class="stat">
+                    <span class="stat-number">${progress.total_modules}</span>
+                    <span class="stat-label">Total</span>
+                  </div>
+                  <div class="stat">
+                    <span class="stat-number">${progress.percentage}%</span>
+                    <span class="stat-label">Progress</span>
+                  </div>
+                </div>
+                <div class="progress-bar-container">
+                  <div class="progress-bar-fill" style="width: ${progress.percentage}%"></div>
+                </div>
+              </div>
+            `;
+
+            // Show certificate if course is completed
+            if (data.data.certificate_url) {
+              certificateDownload.href = data.data.certificate_url;
+              certificateInfo.style.display = 'block';
+            }
+
+            // Show modal
+            progressModal.style.display = 'flex';
+
+          } else {
+            throw new Error(data.message || 'Failed to complete module');
+          }
+        } catch (error) {
+          alert('Error completing module: ' + error.message);
+          // Re-enable button
+          this.disabled = false;
+          this.innerHTML = '✅ Mark as Complete';
+        }
+      });
+    }
+
+    // Modal close functionality
+    if (continueBtn) {
+      continueBtn.addEventListener('click', function() {
+        progressModal.style.display = 'none';
+        // Reload page to show updated status
+        window.location.reload();
+      });
+    }
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+      if (event.target === progressModal) {
+        progressModal.style.display = 'none';
+        window.location.reload();
+      }
+    });
+  });
+</script>
+
+<style>
+  .module-learning {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .module-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  .nav-back {
+    color: #4c51bf;
+    text-decoration: none;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: color 0.2s;
+  }
+
+  .nav-back:hover {
+    color: #434190;
+  }
+
+  .completion-badge {
+    background: #c6f6d5;
+    color: #22543d;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+
+  .module-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  .module-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: #2d3748;
+  }
+
+  .module-description {
+    font-size: 1.2rem;
+    color: #4a5568;
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .content-section {
+    margin-bottom: 3rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .content-section h2 {
+    margin-bottom: 1.5rem;
+    color: #2d3748;
+    font-size: 1.5rem;
+  }
+
+  .video-container {
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .module-video {
+    width: 100%;
+    height: auto;
+    max-height: 500px;
+  }
+
+  .pdf-link {
+    text-decoration: none;
+    display: block;
+  }
+
+  .pdf-preview {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: #f7fafc;
+    border: 2px dashed #cbd5e0;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+
+  .pdf-preview:hover {
+    background: #edf2f7;
+    border-color: #4c51bf;
+  }
+
+  .pdf-icon {
+    font-size: 3rem;
+  }
+
+  .pdf-info h3 {
+    margin: 0 0 0.5rem 0;
+    color: #2d3748;
+  }
+
+  .pdf-info p {
+    margin: 0;
+    color: #4a5568;
+  }
+
+  .empty-content {
+    text-align: center;
+    padding: 3rem;
+    color: #718096;
+  }
+
+  .empty-content h3 {
+    margin-bottom: 1rem;
+    color: #4a5568;
+  }
+
+  .module-actions {
+    text-align: center;
+    padding: 2rem;
+    background: #f7fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .completion-status {
+    color: #22543d;
+  }
+
+  .completion-status h3 {
+    margin-bottom: 1rem;
+  }
+
+  .completion-date {
+    color: #4a5568;
+    font-style: italic;
+    margin-top: 1rem;
+  }
+
+  .completion-note {
+    margin-top: 1rem;
+    color: #4a5568;
+    font-style: italic;
+  }
+
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+  }
+
+  .btn-success {
+    background: #38a169;
+    color: white;
+  }
+
+  .btn-success:hover:not(:disabled) {
+    background: #2f855a;
+  }
+
+  .btn-success:disabled {
+    background: #a0aec0;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background: #4c51bf;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #434190;
+  }
+
+  .btn-gold {
+    background: linear-gradient(135deg, #d69e2e 0%, #f6e05e 100%);
+    color: #1a202c;
+    box-shadow: 0 4px 12px rgba(214, 158, 46, 0.3);
+  }
+
+  .btn-gold:hover {
+    background: linear-gradient(135deg, #c69026 0%, #ecc94b 100%);
+  }
+
+  .btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+  }
+
+  /* Modal Styles */
+  .modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .modal-content {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    width: 90%;
+    animation: slideIn 0.3s ease;
+  }
+
+  .modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: center;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .modal-footer {
+    padding: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+  }
+
+  .progress-update {
+    text-align: center;
+  }
+
+  .progress-stats {
+    display: flex;
+    justify-content: space-around;
+    margin: 1.5rem 0;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #4c51bf;
+  }
+
+  .stat-label {
+    color: #4a5568;
+    font-size: 0.875rem;
+  }
+
+  .progress-bar-container {
+    width: 100%;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 1rem 0;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4c51bf, #667eea);
+    transition: width 0.5s ease;
+  }
+
+  .certificate-celebration {
+    text-align: center;
+    padding: 2rem 0;
+  }
+
+  .certificate-celebration h2 {
+    color: #d69e2e;
+    margin-bottom: 1rem;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideIn {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .alert {
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+
+  .alert-error {
+    background: #fed7d7;
+    color: #9b2c2c;
+    border: 1px solid #feb2b2;
+  }
+
+  @media (max-width: 768px) {
+    .module-learning {
+      padding: 1rem;
+    }
+    
+    .module-header h1 {
+      font-size: 2rem;
+    }
+    
+    .progress-stats {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .modal-content {
+      width: 95%;
+    }
+  }
+</style>

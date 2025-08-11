@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Management - Database Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    {{> ../layout/header }}
+
+    <div class="container-fluid">
+        <div class="row">
+            {{> ../layout/sidebar }}
+            
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">
+                        <i class="fas fa-shopping-cart text-success me-2"></i>
+                        Purchase Management
+                    </h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group me-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-download me-1"></i>Export
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-filter me-1"></i>Filter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="row mb-4">
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-success shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                            Total Purchases
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                            {{stats.totalPurchases}}
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-info shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                            Total Revenue
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                            ${{stats.totalRevenue}}
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-warning shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                            Average Purchase
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                            ${{stats.avgPurchaseValue}}
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                            Active Purchases
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                            {{stats.activePurchases}}
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search and Filter -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" class="form-control" placeholder="Search purchases..." id="searchInput">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-end">
+                            <select class="form-select me-2" style="max-width: 200px;">
+                                <option>All Courses</option>
+                                {{#each courses}}
+                                <option value="{{id}}">{{title}}</option>
+                                {{/each}}
+                            </select>
+                            <select class="form-select" style="max-width: 150px;">
+                                <option>All Status</option>
+                                <option value="active">Active</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Purchases Table -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Course Purchases</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover" width="100%">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Purchase ID</th>
+                                        <th>User</th>
+                                        <th>Course</th>
+                                        <th>Price</th>
+                                        <th>Purchase Date</th>
+                                        <th>Status</th>
+                                        <th>Progress</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{#each purchases}}
+                                    <tr>
+                                        <td>
+                                            <code>{{substring id 0 8}}</code>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm me-2">
+                                                    <div class="avatar-title bg-primary text-white rounded-circle">
+                                                        {{substring user.username 0 1}}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold">{{user.username}}</div>
+                                                    <div class="text-muted small">{{user.email}}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold">{{course.title}}</div>
+                                            <div class="text-muted small">{{course.instructor}}</div>
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold text-success">${{course.price}}</span>
+                                        </td>
+                                        <td>
+                                            {{formatDate purchaseDate}}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success">Active</span>
+                                        </td>
+                                        <td>
+                                            <div class="progress" style="height: 8px;">
+                                                <div class="progress-bar bg-info" role="progressbar" 
+                                                     style="width: {{progressPercentage}}%">
+                                                </div>
+                                            </div>
+                                            <small class="text-muted">{{progressPercentage}}%</small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                        title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-success" 
+                                                        title="Generate Certificate">
+                                                    <i class="fas fa-certificate"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                        title="Revoke Access">
+                                                    <i class="fas fa-ban"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {{/each}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <nav aria-label="Purchase pagination">
+                    <ul class="pagination justify-content-center">
+                        {{#if hasPrevious}}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{previousPage}}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        {{else}}
+                        <li class="page-item disabled">
+                            <span class="page-link" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </span>
+                        </li>
+                        {{/if}}
+
+                        {{#each pages}}
+                        <li class="page-item {{#if active}}active{{/if}}">
+                            <a class="page-link" href="?page={{page}}">{{page}}</a>
+                        </li>
+                        {{/each}}
+
+                        {{#if hasNext}}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{nextPage}}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        {{else}}
+                        <li class="page-item disabled">
+                            <span class="page-link" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </span>
+                        </li>
+                        {{/if}}
+                    </ul>
+                </nav>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+
+        // Add some interactivity
+        document.querySelectorAll('[title]').forEach(el => {
+            el.setAttribute('data-bs-toggle', 'tooltip');
+        });
+
+        // Initialize Bootstrap tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,990 @@
+{{!-- certificates.hbs - User certificates page --}}
+
+<div class="certificates-page">
+  <div class="page-header">
+    <h1>My Certificates</h1>
+    <p class="subtitle">Your achievements and completed courses</p>
+  </div>
+
+  {{#if error}}
+    <div class="alert alert-error">
+      <strong>Error:</strong> {{error}}
+    </div>
+  {{/if}}
+
+  {{#if certificates.length}}
+    <div class="certificates-stats">
+      <div class="stat-card">
+        <div class="stat-icon">🏆</div>
+        <div class="stat-content">
+          <span class="stat-number">{{certificates.length}}</span>
+          <span class="stat-label">Certificates Earned</span>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">📚</div>
+        <div class="stat-content">
+          <span class="stat-number">{{uniqueCourses}}</span>
+          <span class="stat-label">Courses Completed</span>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">📅</div>
+        <div class="stat-content">
+          <span class="stat-number">{{recentCertificates}}</span>
+          <span class="stat-label">This Month</span>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">⭐</div>
+        <div class="stat-content">
+          <span class="stat-number">{{totalScore}}</span>
+          <span class="stat-label">Total Score</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-options">
+        <button class="filter-btn active" data-filter="all">All Certificates</button>
+        <button class="filter-btn" data-filter="recent">Recent</button>
+        <button class="filter-btn" data-filter="highest">Highest Score</button>
+      </div>
+      
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search certificates..." class="search-input">
+        <button class="search-btn">🔍</button>
+      </div>
+    </div>
+
+    <div class="certificates-grid" id="certificatesGrid">
+      {{#each certificates}}
+        <div class="certificate-card" data-course-name="{{this.course_name}}" data-date="{{this.completed_at}}" data-score="{{this.score}}">
+          <div class="certificate-header">
+            <div class="certificate-badge">🏆</div>
+            <div class="certificate-actions">
+              <button onclick="downloadCertificate('{{this.certificate_id}}')" class="action-btn download-btn" title="Download">
+                📥
+              </button>
+              <button onclick="shareCertificate('{{this.certificate_id}}')" class="action-btn share-btn" title="Share">
+                🔗
+              </button>
+              <button onclick="viewCertificate('{{this.certificate_id}}')" class="action-btn view-btn" title="View">
+                👁️
+              </button>
+            </div>
+          </div>
+          
+          <div class="certificate-content">
+            <h3 class="course-title">{{this.course_name}}</h3>
+            <p class="certificate-description">Certificate of Completion</p>
+            
+            <div class="certificate-details">
+              <div class="detail-item">
+                <span class="detail-label">Completed:</span>
+                <span class="detail-value">{{formatDate this.completed_at}}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Score:</span>
+                <span class="detail-value score-{{this.scoreGrade}}">{{this.score}}%</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Duration:</span>
+                <span class="detail-value">{{this.duration_studied}}</span>
+              </div>
+              
+              {{#if this.instructor}}
+                <div class="detail-item">
+                  <span class="detail-label">Instructor:</span>
+                  <span class="detail-value">{{this.instructor}}</span>
+                </div>
+              {{/if}}
+            </div>
+          </div>
+          
+          <div class="certificate-footer">
+            <div class="certificate-id">ID: {{this.certificate_id}}</div>
+            <div class="certificate-grade grade-{{this.scoreGrade}}">
+              {{#if (gte this.score 90)}}Excellent
+              {{else if (gte this.score 80)}}Very Good
+              {{else if (gte this.score 70)}}Good
+              {{else}}Pass
+              {{/if}}
+            </div>
+          </div>
+        </div>
+      {{/each}}
+    </div>
+
+    {{#if (gt totalPages 1)}}
+      <div class="pagination">
+        {{#if (gt currentPageNum 1)}}
+          <a href="?page={{subtract currentPageNum 1}}" class="pagination-btn">
+            ← Previous
+          </a>
+        {{/if}}
+
+        {{#each (range 1 totalPages)}}
+          {{#if (eq this ../currentPageNum)}}
+            <span class="pagination-btn active">{{this}}</span>
+          {{else}}
+            <a href="?page={{this}}" class="pagination-btn">{{this}}</a>
+          {{/if}}
+        {{/each}}
+
+        {{#if (lt currentPageNum totalPages)}}
+          <a href="?page={{add currentPageNum 1}}" class="pagination-btn">
+            Next →
+          </a>
+        {{/if}}
+      </div>
+    {{/if}}
+  {{else}}
+    <div class="empty-state">
+      <div class="empty-icon">🏆</div>
+      <h3>No Certificates Yet</h3>
+      <p>Complete your first course to earn your first certificate!</p>
+      <a href="/my-courses" class="btn btn-primary">View My Courses</a>
+    </div>
+  {{/if}}
+</div>
+
+<!-- Certificate Modal -->
+<div id="certificateModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Certificate Preview</h2>
+      <button class="close-modal" onclick="closeCertificateModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="certificate-preview" id="certificatePreview">
+        <!-- Certificate content will be loaded here -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="downloadCurrentCertificate()" class="btn btn-primary">Download PDF</button>
+      <button onclick="closeCertificateModal()" class="btn btn-secondary">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentCertificateId = null;
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    // Filter functionality
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const certificateCards = document.querySelectorAll('.certificate-card');
+    const searchInput = document.getElementById('searchInput');
+
+    filterButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        filterButtons.forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+        
+        const filter = this.getAttribute('data-filter');
+        applyCertificateFilter(filter);
+      });
+    });
+
+    // Search functionality
+    searchInput.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      certificateCards.forEach(card => {
+        const courseName = card.getAttribute('data-course-name').toLowerCase();
+        card.style.display = courseName.includes(searchTerm) ? 'block' : 'none';
+      });
+    });
+
+    function applyCertificateFilter(filter) {
+      const cards = Array.from(certificateCards);
+      
+      switch (filter) {
+        case 'recent':
+          // Show certificates from last 30 days
+          cards.forEach(card => {
+            const date = new Date(card.getAttribute('data-date'));
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            card.style.display = date >= thirtyDaysAgo ? 'block' : 'none';
+          });
+          break;
+        
+        case 'highest':
+          // Sort by highest score and show top ones
+          cards.sort((a, b) => {
+            const scoreA = parseFloat(a.getAttribute('data-score')) || 0;
+            const scoreB = parseFloat(b.getAttribute('data-score')) || 0;
+            return scoreB - scoreA;
+          });
+          
+          const grid = document.getElementById('certificatesGrid');
+          cards.forEach(card => {
+            grid.appendChild(card);
+            card.style.display = 'block';
+          });
+          break;
+        
+        case 'all':
+        default:
+          cards.forEach(card => {
+            card.style.display = 'block';
+          });
+          break;
+      }
+    }
+  });
+
+  function viewCertificate(certificateId) {
+    currentCertificateId = certificateId;
+    
+    // Show loading state
+    document.getElementById('certificatePreview').innerHTML = `
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading certificate...</p>
+      </div>
+    `;
+    
+    document.getElementById('certificateModal').style.display = 'flex';
+    
+    // Fetch certificate content
+    fetch(\`/api/certificates/\${certificateId}\`, {
+      headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('token')
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        displayCertificate(data.certificate);
+      } else {
+        throw new Error(data.message || 'Failed to load certificate');
+      }
+    })
+    .catch(error => {
+      document.getElementById('certificatePreview').innerHTML = \`
+        <div class="error-state">
+          <p>Error loading certificate: \${error.message}</p>
+        </div>
+      \`;
+    });
+  }
+
+  function displayCertificate(certificate) {
+    const preview = document.getElementById('certificatePreview');
+    preview.innerHTML = \`
+      <div class="certificate-document">
+        <div class="certificate-border">
+          <div class="certificate-header-doc">
+            <h1>CERTIFICATE OF COMPLETION</h1>
+            <div class="certificate-logo">🏆</div>
+          </div>
+          
+          <div class="certificate-body-doc">
+            <p class="certificate-text">This is to certify that</p>
+            <h2 class="recipient-name">\${certificate.user_name}</h2>
+            <p class="certificate-text">has successfully completed the course</p>
+            <h3 class="course-name-doc">\${certificate.course_name}</h3>
+            
+            <div class="certificate-details-doc">
+              <div class="detail-row">
+                <span>Completion Date: \${new Date(certificate.completed_at).toLocaleDateString()}</span>
+              </div>
+              <div class="detail-row">
+                <span>Final Score: \${certificate.score}%</span>
+              </div>
+              <div class="detail-row">
+                <span>Certificate ID: \${certificate.certificate_id}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="certificate-footer-doc">
+            <div class="signature-section">
+              <div class="signature-line"></div>
+              <p>Grocademy Platform</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    \`;
+  }
+
+  function downloadCertificate(certificateId) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please login to download certificates');
+      return;
+    }
+
+    // Create a temporary link to download the certificate
+    const link = document.createElement('a');
+    link.href = \`/api/certificates/\${certificateId}/download\`;
+    link.download = \`certificate-\${certificateId}.pdf\`;
+    
+    // Add authorization header (for APIs that support it)
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  function downloadCurrentCertificate() {
+    if (currentCertificateId) {
+      downloadCertificate(currentCertificateId);
+    }
+  }
+
+  function shareCertificate(certificateId) {
+    const shareUrl = \`\${window.location.origin}/certificates/public/\${certificateId}\`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: 'My Certificate',
+        text: 'Check out my certificate!',
+        url: shareUrl
+      });
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        alert('Certificate link copied to clipboard!');
+      });
+    }
+  }
+
+  function closeCertificateModal() {
+    document.getElementById('certificateModal').style.display = 'none';
+    currentCertificateId = null;
+  }
+
+  // Close modal when clicking outside
+  document.getElementById('certificateModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeCertificateModal();
+    }
+  });
+</script>
+
+<style>
+  .certificates-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .page-header h1 {
+    font-size: 2.5rem;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+    color: #718096;
+    margin: 0;
+  }
+
+  .certificates-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .stat-icon {
+    font-size: 2rem;
+  }
+
+  .stat-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stat-number {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #2d3748;
+  }
+
+  .stat-label {
+    font-size: 0.9rem;
+    color: #718096;
+  }
+
+  .filter-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    gap: 1rem;
+  }
+
+  .filter-options {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .filter-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #e2e8f0;
+    background: white;
+    color: #4a5568;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-btn:hover,
+  .filter-btn.active {
+    background: #4c51bf;
+    color: white;
+    border-color: #4c51bf;
+  }
+
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .search-input {
+    padding: 0.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    width: 200px;
+  }
+
+  .search-btn {
+    padding: 0.5rem;
+    background: #4c51bf;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .certificates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .certificate-card {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .certificate-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .certificate-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .certificate-badge {
+    font-size: 2rem;
+  }
+
+  .certificate-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .action-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+  }
+
+  .action-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+  }
+
+  .certificate-content {
+    padding: 1.5rem;
+  }
+
+  .course-title {
+    font-size: 1.25rem;
+    color: #2d3748;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.3;
+  }
+
+  .certificate-description {
+    color: #718096;
+    margin: 0 0 1.5rem 0;
+    font-style: italic;
+  }
+
+  .certificate-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .detail-label {
+    font-weight: 600;
+    color: #4a5568;
+  }
+
+  .detail-value {
+    color: #2d3748;
+  }
+
+  .score-excellent { color: #22543d; font-weight: bold; }
+  .score-very-good { color: #2d5016; font-weight: bold; }
+  .score-good { color: #744210; font-weight: bold; }
+  .score-pass { color: #4a5568; }
+
+  .certificate-footer {
+    padding: 1rem 1.5rem;
+    background: #f7fafc;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .certificate-id {
+    font-size: 0.8rem;
+    color: #718096;
+    font-family: monospace;
+  }
+
+  .certificate-grade {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .grade-excellent {
+    background: #c6f6d5;
+    color: #22543d;
+  }
+
+  .grade-very-good {
+    background: #d4edda;
+    color: #2d5016;
+  }
+
+  .grade-good {
+    background: #fef5e7;
+    color: #744210;
+  }
+
+  .grade-pass {
+    background: #e2e8f0;
+    color: #4a5568;
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+  }
+
+  .pagination-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #e2e8f0;
+    background: white;
+    color: #4a5568;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+
+  .pagination-btn:hover,
+  .pagination-btn.active {
+    background: #4c51bf;
+    color: white;
+    border-color: #4c51bf;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  .empty-state h3 {
+    font-size: 1.5rem;
+    color: #2d3748;
+    margin-bottom: 1rem;
+  }
+
+  .empty-state p {
+    color: #718096;
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+  }
+
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    text-align: center;
+    transition: all 0.2s;
+    display: inline-block;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary {
+    background: #4c51bf;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #434190;
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background: white;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+  }
+
+  .btn-secondary:hover {
+    background: #f7fafc;
+    border-color: #cbd5e0;
+  }
+
+  .alert {
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+
+  .alert-error {
+    background: #fed7d7;
+    color: #9b2c2c;
+    border: 1px solid #feb2b2;
+  }
+
+  /* Modal Styles */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 8px;
+    max-width: 90%;
+    max-height: 90%;
+    overflow: auto;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  }
+
+  .modal-header {
+    padding: 1rem 2rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-header h2 {
+    margin: 0;
+    color: #2d3748;
+  }
+
+  .close-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #718096;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .close-modal:hover {
+    color: #4a5568;
+    background: #f7fafc;
+    border-radius: 4px;
+  }
+
+  .modal-body {
+    padding: 2rem;
+  }
+
+  .modal-footer {
+    padding: 1rem 2rem;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+  }
+
+  /* Certificate Document Styles */
+  .certificate-document {
+    background: white;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .certificate-border {
+    border: 3px solid #4c51bf;
+    padding: 3rem;
+    position: relative;
+  }
+
+  .certificate-border::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    border: 1px solid #4c51bf;
+    pointer-events: none;
+  }
+
+  .certificate-header-doc {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .certificate-header-doc h1 {
+    font-size: 2.5rem;
+    color: #4c51bf;
+    margin: 0 0 1rem 0;
+    letter-spacing: 2px;
+    font-weight: bold;
+  }
+
+  .certificate-logo {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .certificate-body-doc {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .certificate-text {
+    font-size: 1.2rem;
+    color: #4a5568;
+    margin: 1rem 0;
+  }
+
+  .recipient-name {
+    font-size: 2.5rem;
+    color: #2d3748;
+    margin: 1rem 0;
+    border-bottom: 2px solid #4c51bf;
+    padding-bottom: 0.5rem;
+    display: inline-block;
+  }
+
+  .course-name-doc {
+    font-size: 1.8rem;
+    color: #4c51bf;
+    margin: 1rem 0 2rem 0;
+    font-style: italic;
+  }
+
+  .certificate-details-doc {
+    display: flex;
+    justify-content: space-around;
+    margin: 2rem 0;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .detail-row {
+    font-size: 1rem;
+    color: #4a5568;
+  }
+
+  .certificate-footer-doc {
+    margin-top: 3rem;
+    text-align: center;
+  }
+
+  .signature-section {
+    display: inline-block;
+  }
+
+  .signature-line {
+    width: 200px;
+    height: 2px;
+    background: #4a5568;
+    margin: 0 auto 0.5rem auto;
+  }
+
+  .signature-section p {
+    margin: 0;
+    color: #4a5568;
+    font-weight: 600;
+  }
+
+  .loading-state,
+  .error-state {
+    text-align: center;
+    padding: 2rem;
+    color: #718096;
+  }
+
+  .spinner {
+    border: 3px solid #e2e8f0;
+    border-top: 3px solid #4c51bf;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem auto;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @media (max-width: 768px) {
+    .certificates-page {
+      padding: 1rem;
+    }
+    
+    .certificates-stats {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .filter-section {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .filter-options {
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .search-box {
+      justify-content: center;
+    }
+    
+    .search-input {
+      width: 100%;
+    }
+    
+    .certificates-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    
+    .certificate-header {
+      flex-direction: column;
+      text-align: center;
+      gap: 1rem;
+    }
+    
+    .certificate-footer {
+      flex-direction: column;
+      gap: 0.5rem;
+      text-align: center;
+    }
+    
+    .modal-content {
+      max-width: 95%;
+      margin: 1rem;
+    }
+    
+    .certificate-border {
+      padding: 1.5rem;
+    }
+    
+    .certificate-header-doc h1 {
+      font-size: 1.8rem;
+    }
+    
+    .recipient-name {
+      font-size: 1.8rem;
+    }
+    
+    .course-name-doc {
+      font-size: 1.3rem;
+    }
+    
+    .certificate-details-doc {
+      flex-direction: column;
+    }
+  }
+</style>
