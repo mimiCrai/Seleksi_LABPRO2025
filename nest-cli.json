@@ -9,6 +9,8 @@
         "include": "../views/**/*",
         "outDir": "./dist"
       }
-    ]
-  }
+    ],
+    "watchAssets": true
+  },
+  "exclude": ["scripts/**/*", "scripts"]
 }

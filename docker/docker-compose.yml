@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: grocademy_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: grocademy_db
+      MYSQL_USER: grocademy_user
+      MYSQL_PASSWORD: grocademy_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ../init-db:/docker-entrypoint-initdb.d
+    networks:
+      - grocademy_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # NestJS Application
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: grocademy_app
+    environment:
+      NODE_ENV: production
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USERNAME: grocademy_user
+      DB_PASSWORD: grocademy_password
+      DB_NAME: grocademy_db
+      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - grocademy_network
+    volumes:
+      - ../views:/app/views  # Mount views for hot reload if needed
+    restart: unless-stopped
+
+  # phpMyAdmin (Optional - for database management)
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: grocademy_phpmyadmin
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: grocademy_user
+      PMA_PASSWORD: grocademy_password
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    networks:
+      - grocademy_network
+
+volumes:
+  db_data:
+
+networks:
+  grocademy_network:
+    driver: bridge

@@ -1,98 +1,159 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🎓 Grocademy Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+> A comprehensive e-learning platform built with NestJS, TypeScript, and MySQL.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![NestJS](https://img.shields.io/badge/NestJS-10+-red.svg)](https://nestjs.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5+-blue.svg)](https://www.typescriptlang.org/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0+-orange.svg)](https://mysql.com/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://docker.com/)
 
-## Description
+## ⚡ Quick Start
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+### 🐳 Using Docker (Recommended)
 
 ```bash
-$ npm install
+# 1. Start the application
+docker-compose -f docker/docker-compose.yml up --build
+
+# 2. Initialize database (first time only)
+docker-compose -f docker/docker-compose.yml exec app npm run migration:run
+docker-compose -f docker/docker-compose.yml exec app npm run seed
+
+# 3. Open your browser
+# - App: http://localhost:3000
+# - Database Admin: http://localhost:8080
 ```
 
-## Compile and run the project
+### 💻 Local Development
 
 ```bash
-# development
-$ npm run start
+# 1. Install dependencies
+npm install
 
-# watch mode
-$ npm run start:dev
+# 2. Setup database (MySQL required)
+mysql -u root -p -e "CREATE DATABASE grocademy_db;"
 
-# production mode
-$ npm run start:prod
+# 3. Configure environment
+cp .env.example .env  # Edit with your settings
+
+# 4. Run migrations and seed data
+npm run migration:run && npm run seed
+
+# 5. Start development server
+npm run start:dev
 ```
 
-## Run tests
+## 📁 Project Structure
+
+```
+├── src/                 # Source code
+│   ├── auth/           # Authentication module
+│   ├── course/         # Course management
+│   ├── user/           # User management
+│   ├── database/       # Migrations & seeds
+│   └── views/          # Frontend templates
+├── docker/             # Docker configuration
+├── scripts/            # Utility scripts
+├── docs/              # Documentation
+└── test/              # Test files
+```
+
+## � Test Accounts
+
+| Role | Username | Password | Balance |
+|------|----------|----------|---------|
+| Admin | `nimon_master` | `password123` | 50,000 credits |
+| User | `alice_student` | `password123` | 1,000 credits |
+
+## 🛠️ Development
 
 ```bash
-# unit tests
-$ npm run test
+# Start development server
+npm run start:dev
 
-# e2e tests
-$ npm run test:e2e
+# Run tests
+npm test
 
-# test coverage
-$ npm run test:cov
+# Database operations
+npm run migration:generate    # Create new migration
+npm run migration:run        # Apply migrations
+npm run seed                # Seed test data
+npm run db:reset            # Reset & re-seed database
+
+# Code quality
+npm run lint                # Check code style
+npm run format              # Format code
 ```
 
-## Deployment
+## � Documentation
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+- 📖 **[Docker Guide](./docs/DOCKER.md)** - Detailed Docker setup
+- 🗄️ **[Database Guide](./docs/DATABASE-TESTING.md)** - Database operations
+- 🔧 **[API Reference](http://localhost:3000/api)** - Swagger docs (when running)
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## ✨ Features
+
+- 🔐 **JWT Authentication** - Secure login system
+- 📚 **Course Management** - Create and manage courses
+- 👥 **User Profiles** - Student and admin accounts  
+- 💳 **Credit System** - Virtual currency for purchases
+- 📈 **Progress Tracking** - Learning progress analytics
+- 🎯 **Module System** - Structured course content
+- 📱 **Responsive UI** - Modern web interface
+- 🛡️ **Admin Panel** - Management dashboard
+
+## � Common Issues
+
+<details>
+<summary><strong>Port 3000 already in use</strong></summary>
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+sudo lsof -i :3000
+sudo kill -9 <PID>
 ```
+</details>
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+<details>
+<summary><strong>Database connection failed</strong></summary>
 
-## Resources
+```bash
+# Check MySQL status
+sudo systemctl status mysql
 
-Check out a few resources that may come in handy when working with NestJS:
+# Reset database
+npm run db:reset
+```
+</details>
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+<details>
+<summary><strong>Docker containers won't start</strong></summary>
 
-## Support
+```bash
+docker-compose -f docker/docker-compose.yml down
+docker system prune -f
+docker-compose -f docker/docker-compose.yml up --build
+```
+</details>
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## 🤝 Contributing
 
-## Stay in touch
+1. **Fork** the repository
+2. **Create** feature branch: `git checkout -b feature/amazing-feature`
+3. **Commit** changes: `git commit -m 'Add amazing feature'`
+4. **Push** to branch: `git push origin feature/amazing-feature`
+5. **Open** pull request
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## 📄 License
 
-## License
+This project is **UNLICENSED**. All rights reserved.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+---
+
+<div align="center">
+  
+**[⭐ Star this repo](https://github.com/mimiCrai/Seleksi_LABPRO2025)** • **[🐛 Report Bug](https://github.com/mimiCrai/Seleksi_LABPRO2025/issues)** • **[💡 Request Feature](https://github.com/mimiCrai/Seleksi_LABPRO2025/issues)**
+
+Made with ❤️ for LABPRO 2025
+
+</div>
