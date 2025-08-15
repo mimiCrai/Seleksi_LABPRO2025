@@ -490,26 +490,33 @@ export class PagesController {
   @ApiParam({ name: 'courseId', type: String, description: 'Course ID' })
   async continueCourseLearning(@Param('courseId') courseId: string, @Req() req: any, @Res() res: Response) {
     const token = req.cookies?.token;
-    
-    if (!token) {
-      return res.redirect('/login');
+  let user: any = null;
+    if (token) {
+      try {
+        const userRes = await firstValueFrom(
+          this.http.get('http://localhost:3000/api/auth/self', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+        );
+        user = userRes.data;
+      } catch (err) {
+        // Token invalid or expired
+        user = null;
+      }
+    }
+
+    if (!user) {
+      // Show friendly error instead of redirecting immediately
+      return res.render('my-courses', {
+        pageTitle: 'My Courses',
+        currentPage: 'my-courses',
+        error: 'Session expired or not logged in. Please login again.',
+      });
     }
 
     try {
-      // First, validate the token by checking user auth
-      const userRes = await firstValueFrom(
-        this.http.get('http://localhost:3000/api/auth/self', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-      );
-      
-      if (!userRes.data) {
-        // Token is invalid, redirect to login
-        return res.redirect('/login');
-      }
-
       // Get course details with next module
       const detailsRes = await firstValueFrom(
         this.http.get(`http://localhost:3000/api/courses/${courseId}/details`, {
@@ -518,27 +525,22 @@ export class PagesController {
           },
         }),
       );
-      
       const courseDetails = detailsRes.data.data;
       const nextModuleId = courseDetails.progress_summary?.next_module_id;
-      
       if (!nextModuleId) {
         // No next module available, redirect to course modules page
         return res.redirect(`/my-courses/${courseId}/modules`);
       }
-      
       // Redirect to the next module
       return res.redirect(`/modules/${nextModuleId}`);
     } catch (error) {
       console.error('Error getting next module:', error.response?.data || error.message);
-      
-      // Check if it's an auth error
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        return res.redirect('/login');
-      }
-      
-      // For other errors, fallback to my-courses modules page
-      return res.redirect(`/my-courses/${courseId}/modules`);
+      // Show error on my-courses page instead of logging out
+      return res.render('my-courses', {
+        pageTitle: 'My Courses',
+        currentPage: 'my-courses',
+        error: 'Error loading course modules. Please try again.',
+      });
     }
   }
 
@@ -548,27 +550,31 @@ export class PagesController {
   @Render('my-courses')
   async myCoursesWithModules(@Param('courseId') courseId: string, @Req() req: any) {
     const token = req.cookies?.token;
-    
-    if (!token) {
+  let user: any = null;
+    if (token) {
+      try {
+        const userRes = await firstValueFrom(
+          this.http.get('http://localhost:3000/api/auth/self', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+        );
+        user = userRes.data;
+      } catch (err) {
+        user = null;
+      }
+    }
+
+    if (!user) {
       return {
         pageTitle: 'My Courses',
         currentPage: 'my-courses',
-        message: 'Please login first'
+        error: 'Session expired or not logged in. Please login again.',
       };
     }
 
     try {
-      // Get user profile first
-      const userRes = await firstValueFrom(
-        this.http.get('http://localhost:3000/api/auth/self', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-      );
-
-      const user = userRes.data;
-
       // Get user's courses
       const myCoursesRes = await firstValueFrom(
         this.http.get('http://localhost:3000/api/courses/my-courses', {
@@ -577,9 +583,7 @@ export class PagesController {
           },
         }),
       );
-
       const myCourses = myCoursesRes.data.data || [];
-
       // Get modules for the specific course
       const modulesRes = await firstValueFrom(
         this.http.get(`http://localhost:3000/api/courses/${courseId}/modules`, {
@@ -588,9 +592,7 @@ export class PagesController {
           },
         }),
       );
-
       const modules = modulesRes.data.data || [];
-
       return {
         pageTitle: 'My Courses',
         currentPage: 'my-courses',
@@ -605,7 +607,7 @@ export class PagesController {
       return {
         pageTitle: 'My Courses',
         currentPage: 'my-courses',
-        message: 'Error loading course modules',
+        error: 'Error loading course modules. Please try again.',
       };
     }
   }
