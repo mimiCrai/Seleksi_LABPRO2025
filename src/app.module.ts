@@ -6,6 +6,7 @@ import { UserModule } from './user/user.module';
 import { CourseModule } from './course/course.module';
 import { DatabaseModule } from './database/database.module';
 import { PagesController } from './pages.controller';
+import { HealthService } from './health.service';
 import { HttpModule } from '@nestjs/axios';
 import { getDatabaseConfig } from './config/database.config';
 
@@ -21,6 +22,6 @@ import { getDatabaseConfig } from './config/database.config';
     HttpModule,
   ],
   controllers: [PagesController],
-  providers: [],
+  providers: [HealthService],
 })
 export class AppModule {}

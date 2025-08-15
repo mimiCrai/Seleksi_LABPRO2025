@@ -16,6 +16,7 @@ import { ApiOperation, ApiBody, ApiResponse, ApiTags, ApiBearerAuth, ApiParam, A
 import { AuthGuard } from '@nestjs/passport';
 import { AdminGuard } from './auth/admin.guard';
 import { AuthService } from './auth/auth.service';
+import { HealthService } from './health.service';
 import type { Response } from 'express';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
@@ -25,8 +26,17 @@ import { firstValueFrom } from 'rxjs';
 export class PagesController {
   constructor(
     private authService: AuthService,
+    private healthService: HealthService,
     private http: HttpService,
   ) {}
+
+  // Health check endpoint for Railway
+  @Get()
+  @ApiOperation({ summary: 'Health check endpoint' })
+  @ApiResponse({ status: 200, description: 'Service is healthy' })
+  async healthCheck() {
+    return await this.healthService.checkHealth();
+  }
 
   @Get('register')
   @ApiOperation({ summary: 'Show register page' })
