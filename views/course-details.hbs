@@ -28,7 +28,10 @@
       
       <div class="course-sidebar">
         {{#if course.thumbnail_image}}
-          <img src="{{course.thumbnail_image}}" alt="{{course.title}}" class="course-image">
+          <img src="{{course.thumbnail_image}}" alt="{{course.title}}" class="course-image"
+               onerror="this.src='/static/default-course.jpg'">
+        {{else}}
+          <img src="/static/default-course.jpg" alt="{{course.title}}" class="course-image">
         {{/if}}
         
         <div class="course-price">
@@ -47,15 +50,19 @@
 
         {{#if isPurchased}}
           {{#if course.progress_summary.next_module_id}}
-            <a href="/modules/{{course.progress_summary.next_module_id}}" class="btn btn-primary btn-full">
-              {{#if (eq course.progress_summary.progress_percentage 0)}}
-                🎓 Start Learning
-              {{else if course.progress_summary.is_completed}}
+            {{#if course.progress_summary.is_completed}}
+              <a href="/courses/{{course.id}}/modules" class="btn btn-primary btn-full">
                 🔄 Review Course
-              {{else}}
-                📖 Continue Learning
-              {{/if}}
-            </a>
+              </a>
+            {{else}}
+              <a href="/modules/{{course.progress_summary.next_module_id}}" class="btn btn-primary btn-full">
+                {{#if (eq course.progress_summary.progress_percentage 0)}}
+                  🎓 Start Learning
+                {{else}}
+                  � Continue Learning
+                {{/if}}
+              </a>
+            {{/if}}
           {{else}}
             <div class="btn btn-secondary btn-full" style="cursor: not-allowed;">
               📚 No Modules Available
@@ -68,6 +75,12 @@
               ✅ Course Purchased
             {{/if}}
           </div>
+          
+          {{#if course.progress_summary.is_completed}}
+            <a href="{{course.progress_summary.certificate_url}}" target="_blank" class="btn btn-gold btn-full" style="margin-top: 10px;">
+              📜 Download Certificate
+            </a>
+          {{/if}}
         {{else}}
           <form action="/buy-course" method="POST">
             <input type="hidden" name="courseId" value="{{course.id}}">
@@ -104,18 +117,6 @@
                   {{/if}}
                 </div>
               </div>
-              
-              {{#if ../isPurchased}}
-                <div class="module-actions">
-                  <a href="/modules/{{this.id}}" class="btn btn-sm btn-secondary">
-                    {{#if this.is_completed}}
-                      Review Module
-                    {{else}}
-                      Start Module
-                    {{/if}}
-                  </a>
-                </div>
-              {{/if}}
             </div>
           {{/each}}
         </div>
@@ -264,6 +265,21 @@
   .btn-primary:hover {
     background: #434190;
     color: white;
+  }
+
+  .btn-gold {
+    background: linear-gradient(135deg, #f7b733 0%, #fc4a1a 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(247, 183, 51, 0.3);
+    font-weight: bold;
+  }
+
+  .btn-gold:hover {
+    background: linear-gradient(135deg, #e6a82a 0%, #e23817 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(247, 183, 51, 0.4);
   }
 
   .alert {

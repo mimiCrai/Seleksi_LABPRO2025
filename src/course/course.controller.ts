@@ -1,12 +1,11 @@
-import { Body, Controller, Get, Post, UseGuards, Query, Param, Req, Put, Delete, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiOperation, ApiBody, ApiResponse, ApiTags, ApiBearerAuth, ApiQuery, ApiParam } from '@nestjs/swagger';
+import { Body, Controller, Get, Post, UseGuards, Query, Param, Req, Put, Delete, HttpCode, HttpStatus, UseInterceptors, UploadedFiles } from '@nestjs/common';
+import { ApiOperation, ApiBody, ApiResponse, ApiTags, ApiBearerAuth, ApiQuery, ApiParam, ApiConsumes } from '@nestjs/swagger';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { CourseService } from './course.service';
 import { Course } from './entities/course/course';
 import { AuthGuard } from '@nestjs/passport';
-import { AdminGuard } from '../auth/admin.guard';
 
 import { UpdateCourseDto } from './dto/update-course.dto';
-
 
 
 @Controller('api/courses')
@@ -15,9 +14,9 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 export class CourseController {
   constructor(private readonly courseService: CourseService) {}
 
-  // Admin only — sementara kita belum pakai RoleGuard
+  // Create course endpoint - now available to all authenticated users
   @Post()
-  @ApiOperation({ summary: 'Create a new course (Admin only)' })
+  @ApiOperation({ summary: 'Create a new course' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -33,7 +32,7 @@ export class CourseController {
     }
   })
   @ApiResponse({ status: 201, description: 'Course created successfully' })
-  @UseGuards(AuthGuard('jwt'), AdminGuard)
+  @UseGuards(AuthGuard('jwt'))
   create(@Body() body: Partial<Course>) {
     return this.courseService.create(body);
   }
@@ -89,12 +88,7 @@ export class CourseController {
   @ApiResponse({ status: 200, description: 'My courses fetched' })
     @UseGuards(AuthGuard('jwt'))
     async getMyCourses(@Req() req: any) {
-    const courses = await this.courseService.findMyCourses(req.user.userId);
-    return {
-      status: 'success',
-      message: 'My courses fetched',
-      data: courses,
-    };
+        return await this.courseService.findMyCourses(req.user.userId);
     }
 
   // Get single course by ID (Public - no auth required for basic course info)
@@ -129,12 +123,7 @@ export class CourseController {
   })
   @ApiResponse({ status: 404, description: 'Course not found' })
   async getCourseById(@Param('id') id: string) {
-    const course = await this.courseService.findById(id);
-    return {
-      status: 'success',
-      message: 'Course fetched successfully',
-      data: course,
-    };
+    return await this.courseService.findById(id);
   }
 
   // Get course details with modules (for course details page)
@@ -210,7 +199,7 @@ export class CourseController {
     }
     
     // Get course with modules
-    const course = await this.courseService.findByIdWithModules(id, userId || undefined);
+    const course = await this.courseService.findByIdWithModules(id);
     
     // Get progress summary only if user is authenticated and owns the course
     let progressSummary: any = null;
@@ -233,7 +222,8 @@ export class CourseController {
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Update a course (Admin only)' })
+  @ApiOperation({ summary: 'Update a course' })
+  @ApiConsumes('multipart/form-data')
   @ApiParam({ name: 'id', type: String, description: 'Course ID' })
   @ApiBody({
     schema: {
@@ -242,9 +232,8 @@ export class CourseController {
         title: { type: 'string' },
         description: { type: 'string' },
         instructor: { type: 'string' },
-        topics: { type: 'array', items: { type: 'string' } },
         price: { type: 'number' },
-        thumbnail_image: { type: 'string', nullable: true }
+        thumbnail_image: { type: 'string', format: 'binary', nullable: true, description: 'Thumbnail image file' }
       }
     }
   })
@@ -274,9 +263,16 @@ export class CourseController {
     }
   })
   @ApiResponse({ status: 404, description: 'Course not found' })
-  @UseGuards(AuthGuard('jwt'), AdminGuard)
-  async updateCourse(@Param('id') id: string, @Body() body: UpdateCourseDto) {
-    const course = await this.courseService.update(id, body);
+  @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'thumbnail_image', maxCount: 1 }
+  ]))
+  async updateCourse(
+    @Param('id') id: string, 
+    @Body() body: { title?: string; description?: string; instructor?: string; price?: number },
+    @UploadedFiles() files: { thumbnail_image?: any[] }
+  ) {
+    const course = await this.courseService.updateWithFiles(id, body, files);
     return {
       status: 'success',
       message: 'Course updated successfully',
@@ -286,11 +282,11 @@ export class CourseController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete a course (Admin only)' })
+  @ApiOperation({ summary: 'Delete a course' })
   @ApiParam({ name: 'id', type: String, description: 'Course ID' })
   @ApiResponse({ status: 204, description: 'Course deleted successfully (No Content)' })
   @ApiResponse({ status: 404, description: 'Course not found' })
-  @UseGuards(AuthGuard('jwt'), AdminGuard)
+  @UseGuards(AuthGuard('jwt'))
   async deleteCourse(@Param('id') id: string) {
     await this.courseService.delete(id);
     // Return 204 No Content status

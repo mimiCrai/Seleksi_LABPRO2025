@@ -21,4 +21,9 @@ export class UpdateCourseDto {
   @IsOptional()
   @IsNumber()
   price?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  thumbnail_image?: string;
 }

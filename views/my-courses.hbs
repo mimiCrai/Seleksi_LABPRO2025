@@ -113,9 +113,14 @@
             
             <div class="course-actions">
               {{#if (eq this.progress_percentage 100)}}
-                <a href="/my-courses/{{this.id}}/continue" class="btn btn-primary">
+                <a href="/courses/{{this.id}}/modules" class="btn btn-primary">
                   Review Course
                 </a>
+                {{#if this.certificate_url}}
+                  <a href="{{this.certificate_url}}" target="_blank" class="btn btn-gold">
+                    📜 Download Certificate
+                  </a>
+                {{/if}}
                 <a href="/courses/{{this.id}}" class="btn btn-secondary">
                   Course Details
                 </a>
@@ -539,6 +544,21 @@
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(76, 81, 191, 0.4);
     color: white;
+  }
+
+  .btn-gold {
+    background: linear-gradient(135deg, #f7b733 0%, #fc4a1a 100%);
+    color: white;
+    border: 1px solid #f7b733;
+    box-shadow: 0 4px 15px rgba(247, 183, 51, 0.3);
+    font-weight: bold;
+  }
+
+  .btn-gold:hover {
+    background: linear-gradient(135deg, #e6a82a 0%, #e23817 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(247, 183, 51, 0.4);
   }
 
   .btn-secondary {

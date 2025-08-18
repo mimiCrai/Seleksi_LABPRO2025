@@ -129,54 +129,63 @@
         this.innerHTML = '⏳ Completing...';
 
         try {
+          // Use the API endpoint with cookie credentials (not localStorage token)
           const response = await fetch(`/api/modules/${moduleId}/complete`, {
             method: 'PATCH',
+            credentials: 'include', // Include cookies in the request
             headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
               'Content-Type': 'application/json'
             }
           });
 
-          const data = await response.json();
-
-          if (response.ok && data.status === 'success') {
-            // Show progress information
-            const progress = data.data.course_progress;
-            progressInfo.innerHTML = `
-              <div class="progress-update">
-                <h4>Progress Updated!</h4>
-                <div class="progress-stats">
-                  <div class="stat">
-                    <span class="stat-number">${progress.completed_modules}</span>
-                    <span class="stat-label">Completed</span>
+          if (response.ok) {
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+              // Update the page UI to show completion
+              updatePageUIForCompletion();
+              
+              // Show progress information
+              const progress = data.data.course_progress;
+              progressInfo.innerHTML = `
+                <div class="progress-update">
+                  <h4>Progress Updated!</h4>
+                  <div class="progress-stats">
+                    <div class="stat">
+                      <span class="stat-number">${progress.completed_modules}</span>
+                      <span class="stat-label">Completed</span>
+                    </div>
+                    <div class="stat">
+                      <span class="stat-number">${progress.total_modules}</span>
+                      <span class="stat-label">Total</span>
+                    </div>
+                    <div class="stat">
+                      <span class="stat-number">${progress.percentage}%</span>
+                      <span class="stat-label">Progress</span>
+                    </div>
                   </div>
-                  <div class="stat">
-                    <span class="stat-number">${progress.total_modules}</span>
-                    <span class="stat-label">Total</span>
-                  </div>
-                  <div class="stat">
-                    <span class="stat-number">${progress.percentage}%</span>
-                    <span class="stat-label">Progress</span>
+                  <div class="progress-bar-container">
+                    <div class="progress-bar-fill" style="width: ${progress.percentage}%"></div>
                   </div>
                 </div>
-                <div class="progress-bar-container">
-                  <div class="progress-bar-fill" style="width: ${progress.percentage}%"></div>
-                </div>
-              </div>
-            `;
+              `;
 
-            // Show certificate if course is completed
-            if (data.data.certificate_url) {
-              certificateDownload.href = data.data.certificate_url;
-              certificateInfo.style.display = 'block';
+              // Show certificate if course is completed
+              if (data.data.certificate_url) {
+                certificateDownload.href = data.data.certificate_url;
+                certificateInfo.style.display = 'block';
+              }
+
+              // Show modal
+              progressModal.style.display = 'flex';
+              return;
             }
-
-            // Show modal
-            progressModal.style.display = 'flex';
-
-          } else {
-            throw new Error(data.message || 'Failed to complete module');
           }
+          
+          // If we get here, something went wrong
+          const errorData = await response.json().catch(() => ({ message: 'Unknown error occurred' }));
+          throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+          
         } catch (error) {
           alert('Error completing module: ' + error.message);
           // Re-enable button
@@ -190,16 +199,38 @@
     if (continueBtn) {
       continueBtn.addEventListener('click', function() {
         progressModal.style.display = 'none';
-        // Reload page to show updated status
-        window.location.reload();
+        // No need to reload since we updated the UI dynamically
       });
+    }
+
+    // Function to update page UI when module is completed
+    function updatePageUIForCompletion() {
+      // Update the completion badge in navigation
+      const completionBadge = document.querySelector('.completion-badge');
+      if (completionBadge) {
+        completionBadge.innerHTML = '✅ Completed';
+        completionBadge.classList.add('completed');
+      }
+
+      // Update the module actions section
+      const moduleActions = document.querySelector('.module-actions');
+      if (moduleActions) {
+        moduleActions.innerHTML = `
+          <div class="completion-status">
+            <div class="completed-icon">✅</div>
+            <div>
+              <h3>Module Completed!</h3>
+              <p>Well done! You've successfully completed this module.</p>
+            </div>
+          </div>
+        `;
+      }
     }
 
     // Close modal when clicking outside
     window.addEventListener('click', function(event) {
       if (event.target === progressModal) {
         progressModal.style.display = 'none';
-        window.location.reload();
       }
     });
   });
@@ -344,12 +375,37 @@
     border: 1px solid #e2e8f0;
   }
 
+  .completion-badge.completed {
+    background: #10b981;
+    color: white;
+  }
+
   .completion-status {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    background: #f0fdf4;
+    border: 2px solid #10b981;
+    border-radius: 10px;
+    text-align: left;
     color: #22543d;
   }
 
+  .completed-icon {
+    font-size: 2em;
+    color: #10b981;
+    flex-shrink: 0;
+  }
+
   .completion-status h3 {
-    margin-bottom: 1rem;
+    margin: 0 0 5px 0;
+    color: #059669;
+  }
+
+  .completion-status p {
+    margin: 0;
+    color: #065f46;
   }
 
   .completion-date {

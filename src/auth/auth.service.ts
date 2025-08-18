@@ -21,57 +21,117 @@ export class AuthService {
     password: string;
     first_name: string;
     last_name: string;
-  }): Promise<Partial<User>> {
+  }) {
     const { username, email, password, first_name, last_name } = data;
 
-    // Cek apakah username/email sudah dipakai
-    const existing = await this.userService.findByEmailOrUsername(email, username);
-    if (existing) throw new ConflictException('Email or username already exists');
+    try {
+      // Cek apakah username/email sudah dipakai
+      const existing = await this.userService.findByEmailOrUsername(email, username);
+      if (existing) {
+        return {
+          status: 'error',
+          message: 'Email or username already exists',
+          data: null
+        };
+      }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+      const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await this.userService.create({
-      username,
-      email,
-      password: hashedPassword,
-      first_name,
-      last_name,
-    });
+      const user = await this.userService.create({
+        username,
+        email,
+        password: hashedPassword,
+        first_name,
+        last_name,
+      });
 
-    // Return tanpa password
-    const { password: _, ...safe } = user;
-    return safe;
+      // Return tanpa password
+      const { password: _, ...safe } = user;
+      return {
+        status: 'success',
+        message: 'User registered successfully',
+        data: safe
+      };
+    } catch (error) {
+      return {
+        status: 'error',
+        message: 'Registration failed',
+        data: null
+      };
+    }
   }
 
   async login(identifier: string, password: string) {
-    const user = await this.userService.findByIdentifier(identifier);
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    try {
+      const user = await this.userService.findByIdentifier(identifier);
+      if (!user) {
+        return {
+          status: 'error',
+          message: 'Invalid credentials',
+          data: null
+        };
+      }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) throw new UnauthorizedException('Invalid credentials');
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return {
+          status: 'error',
+          message: 'Invalid credentials',
+          data: null
+        };
+      }
 
-    const token = this.jwtService.sign({ sub: user.id, username: user.username, is_admin: user.is_admin});
+      const token = this.jwtService.sign({ sub: user.id, username: user.username, is_admin: user.is_admin});
 
-    return {
-      username: user.username,
-      token,
-    };
+      return {
+        status: "success",
+        message: "login berhasil",
+        data: {
+          username: user.username,
+          token: token,
+          is_admin: user.is_admin,
+        }
+      };
+    } catch (error) {
+      return {
+        status: 'error',
+        message: 'Login failed',
+        data: null
+      };
+    }
   }
 
   async getUserProfile(userId: string) {
-    const user = await this.userService.findById(userId);
-    if (!user) throw new UnauthorizedException('User not found');
+    try {
+      const user = await this.userService.findById(userId);
+      if (!user) {
+        return {
+          status: 'error',
+          message: 'User not found',
+          data: null
+        };
+      }
 
-    return {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      first_name: user.first_name,
-      last_name: user.last_name,
-      balance: user.balance,
-      is_admin: user.is_admin,
-      created_at: user.created_at,
-    };
+      return {
+        status: 'success',
+        message: 'User profile retrieved successfully',
+        data: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          balance: user.balance,
+          is_admin: user.is_admin,
+        }
+      };
+    } catch (error) {
+      return {
+        status: 'error',
+        message: 'Failed to retrieve user profile',
+        data: null
+      };
+    }
   }
 }
 

@@ -1,0 +1,12 @@
+<svg width="400" height="200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200">
+  <rect width="400" height="200" fill="#4c1d95"/>
+  <rect x="30" y="40" width="340" height="120" fill="#6b21a8" rx="8"/>
+  <text x="200" y="80" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#ffffff" font-weight="bold">Test Course</text>
+  <text x="200" y="100" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#e9d5ff">Learning & Development</text>
+  <text x="200" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#c4b5fd">Sample Course Content</text>
+  <rect x="60" y="65" width="12" height="10" fill="#a855f7"/>
+  <rect x="80" y="65" width="12" height="10" fill="#9333ea"/>
+  <rect x="100" y="65" width="12" height="10" fill="#7c3aed"/>
+  <rect x="300" y="50" width="60" height="40" fill="#a855f7" rx="4"/>
+  <text x="330" y="70" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#4c1d95" font-weight="bold">TEST</text>
+</svg>

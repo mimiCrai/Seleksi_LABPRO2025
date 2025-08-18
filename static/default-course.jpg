@@ -1,0 +1,10 @@
+<svg width="400" height="200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200">
+  <rect width="400" height="200" fill="#f7fafc"/>
+  <rect x="50" y="50" width="300" height="100" fill="#e2e8f0" rx="8"/>
+  <text x="200" y="90" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#4a5568">Default Course</text>
+  <text x="200" y="110" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#718096">Thumbnail</text>
+  <circle cx="80" cy="80" r="15" fill="#4c51bf"/>
+  <circle cx="120" cy="80" r="15" fill="#48bb78"/>
+  <circle cx="160" cy="80" r="15" fill="#ed8936"/>
+  <rect x="280" y="65" width="40" height="30" fill="#9f7aea" rx="4"/>
+</svg>

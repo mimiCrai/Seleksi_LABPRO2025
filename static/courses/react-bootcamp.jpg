@@ -1,0 +1,12 @@
+<svg width="400" height="200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200">
+  <rect width="400" height="200" fill="#20232a"/>
+  <rect x="30" y="40" width="340" height="120" fill="#282c34" rx="8"/>
+  <text x="200" y="80" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#61dafb" font-weight="bold">React</text>
+  <text x="200" y="100" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#ffffff">Frontend Bootcamp</text>
+  <text x="200" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#abb2bf">Build Modern Web Apps</text>
+  <circle cx="60" cy="70" r="8" fill="#61dafb"/>
+  <circle cx="80" cy="70" r="8" fill="#61dafb"/>
+  <circle cx="100" cy="70" r="8" fill="#61dafb"/>
+  <rect x="300" y="50" width="60" height="40" fill="#61dafb" rx="4"/>
+  <text x="330" y="70" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#20232a" font-weight="bold">REACT</text>
+</svg>

@@ -1,11 +1,12 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, createQueryBuilder, In } from 'typeorm';
 import { Course } from './entities/course/course';
 import { CourseModule } from './entities/course/course-module';
 import { UserCourse } from '../user/entities/user/user-course';
 import { UserProgress } from '../user/entities/user/user-progress';
 import { User } from '../user/entities/user/user';
+import { UploadService } from '../upload/upload.service';
 
 @Injectable()
 export class CourseService {
@@ -16,17 +17,32 @@ export class CourseService {
     @InjectRepository(User) private userRepo: Repository<User>,
     @InjectRepository(UserCourse) private userCourseRepo: Repository<UserCourse>,
     @InjectRepository(UserProgress) private userProgressRepo: Repository<UserProgress>,
+    private uploadService: UploadService,
     ) {}
 
   async create(data: Partial<Course>) {
-    const course = this.courseRepo.create(data);
-    return this.courseRepo.save(course);
+    try {
+      const course = this.courseRepo.create(data);
+      const savedCourse = await this.courseRepo.save(course);
+      return {
+        status: 'success',
+        message: 'Course created successfully',
+        data: savedCourse
+      };
+    } catch (error) {
+      return {
+        status: 'error',
+        message: 'Failed to create course',
+        data: null
+      };
+    }
   }
 
   async findAll(
   page = 1,
   limit = 15,
     search?: string,
+    excludePurchasedByUserId?: string,
     ): Promise<{ data: Course[]; total: number; totalPages: number }> {
     const query = this.courseRepo.createQueryBuilder('course');
 
@@ -35,6 +51,24 @@ export class CourseService {
         'LOWER(course.title) LIKE :search OR LOWER(course.instructor) LIKE :search OR LOWER(course.topics) LIKE :search',
         { search: `%${search.toLowerCase()}%` },
         );
+    }
+
+    // Exclude courses already purchased by the user
+    if (excludePurchasedByUserId) {
+      const userCourses = await this.userCourseRepo.find({
+        where: { user: { id: excludePurchasedByUserId } },
+        relations: ['course'],
+      });
+      
+      const purchasedCourseIds = userCourses.map(uc => uc.course.id);
+      
+      if (purchasedCourseIds.length > 0) {
+        if (search) {
+          query.andWhere('course.id NOT IN (:...purchasedIds)', { purchasedIds: purchasedCourseIds });
+        } else {
+          query.where('course.id NOT IN (:...purchasedIds)', { purchasedIds: purchasedCourseIds });
+        }
+      }
     }
 
     query.skip((page - 1) * limit).take(limit);
@@ -86,53 +120,94 @@ export class CourseService {
 
 
     async findMyCourses(userId: string) {
-    const user = await this.userRepo.findOne({
-        where: { id: userId },
-        relations: ['userCourses', 'userCourses.course'],
-    });
+        try {
+            const user = await this.userRepo.findOne({
+                where: { id: userId },
+                relations: ['userCourses', 'userCourses.course'],
+            });
 
-    if (!user) throw new NotFoundException('User not found');
+            if (!user) {
+                return {
+                    status: 'error',
+                    message: 'User not found',
+                    data: null
+                };
+            }
 
-    const data = await Promise.all(user.userCourses.map(async (uc) => {
-        // Calculate progress percentage
-        const progress = await this.calculateCourseProgress(uc.course.id, userId);
-        
-        return {
-        id: uc.course.id,
-        title: uc.course.title,
-        description: uc.course.description,
-        instructor: uc.course.instructor,
-        thumbnail_image: uc.course.thumbnail_image,
-        progress_percentage: progress,
-        purchased_at: uc.purchased_at,
-        };
-    }));
+            const data = await Promise.all(user.userCourses.map(async (uc) => {
+                // Calculate progress percentage
+                const progress = await this.calculateCourseProgress(uc.course.id, userId);
+                
+                // Generate certificate URL if course is 100% complete
+                let certificateUrl: string | null = null;
+                if (progress === 100) {
+                    certificateUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/certificates/${userId}/${uc.course.id}`;
+                }
+                
+                return {
+                id: uc.course.id,
+                title: uc.course.title,
+                description: uc.course.description,
+                instructor: uc.course.instructor,
+                thumbnail_image: uc.course.thumbnail_image,
+                progress_percentage: progress,
+                purchased_at: uc.purchased_at,
+                certificate_url: certificateUrl,
+                };
+            }));
 
-    return data;
+            return {
+                status: 'success',
+                message: 'My courses fetched successfully',
+                data: data
+            };
+        } catch (error) {
+            return {
+                status: 'error',
+                message: 'Failed to fetch courses',
+                data: null
+            };
+        }
     }
 
     async findById(id: string) {
-        const course = await this.courseRepo.createQueryBuilder('course')
-            .leftJoin('course.modules', 'module')
-            .addSelect('COUNT(module.id)', 'total_modules')
-            .where('course.id = :id', { id })
-            .groupBy('course.id')
-            .getRawAndEntities();
+        try {
+            const course = await this.courseRepo.createQueryBuilder('course')
+                .leftJoin('course.modules', 'module')
+                .addSelect('COUNT(module.id)', 'total_modules')
+                .where('course.id = :id', { id })
+                .groupBy('course.id')
+                .getRawAndEntities();
 
-        if (!course.entities.length) {
-            throw new NotFoundException('Course not found');
+            if (!course.entities.length) {
+                return {
+                    status: 'error',
+                    message: 'Course not found',
+                    data: null
+                };
+            }
+
+            const courseData = course.entities[0];
+            const totalModules = parseInt(course.raw[0]?.total_modules || '0');
+
+            return {
+                status: 'success',
+                message: 'Course fetched successfully',
+                data: {
+                    ...courseData,
+                    total_modules: totalModules
+                }
+            };
+        } catch (error) {
+            return {
+                status: 'error',
+                message: 'Failed to fetch course',
+                data: null
+            };
         }
-
-        const courseData = course.entities[0];
-        const totalModules = parseInt(course.raw[0]?.total_modules || '0');
-
-        return {
-            ...courseData,
-            total_modules: totalModules
-        };
     }
 
-    // Admin only: Add module to course
+    // Add module to course - available to all authenticated users
     async addModuleToCourse(
         courseId: string, 
         moduleData: { title: string; description: string }, 
@@ -150,20 +225,18 @@ export class CourseService {
         
         const nextOrder = (maxOrder.max || 0) + 1;
 
-        // Handle file uploads (in a real app, you'd upload to object storage)
+        // Handle file uploads
         let pdfContent: string | null = null;
         let videoContent: string | null = null;
 
         if (files?.pdf_content?.[0]) {
-            // For now, we'll just store the filename/path
-            // In production, upload to S3/GCS and store the URL
-            pdfContent = `uploads/pdf/${Date.now()}_${files.pdf_content[0].originalname}`;
+            const uploadResult = await this.uploadService.uploadFile(files.pdf_content[0], 'pdfs');
+            pdfContent = uploadResult.url;
         }
 
         if (files?.video_content?.[0]) {
-            // For now, we'll just store the filename/path
-            // In production, upload to S3/GCS and store the URL
-            videoContent = `uploads/video/${Date.now()}_${files.video_content[0].originalname}`;
+            const uploadResult = await this.uploadService.uploadFile(files.video_content[0], 'videos');
+            videoContent = uploadResult.url;
         }
 
         const module = this.courseModuleRepo.create({
@@ -200,42 +273,43 @@ export class CourseService {
         const course = await this.courseRepo.findOne({ where: { id: courseId } });
         if (!course) throw new NotFoundException('Course not found');
 
-        const query = this.courseModuleRepo
-            .createQueryBuilder('module')
-            .leftJoinAndSelect('module.course', 'course')
-            .where('course.id = :courseId', { courseId })
-            .orderBy('module.order', 'ASC');
-        
-        // Only add progress tracking if user is authenticated
-        if (userId) {
-            query
-                .leftJoin('module.userProgresses', 'progress', 'progress.user.id = :userId', { userId })
-                .addSelect('CASE WHEN progress.id IS NOT NULL THEN true ELSE false END', 'is_completed');
-        } else {
-            // For unauthenticated users, set is_completed to false
-            query.addSelect('false', 'is_completed');
-        }
-        
-        query
-            .skip((page - 1) * limit)
-            .take(limit);
-
+        // Get modules with pagination
         const [modules, total] = await Promise.all([
-            query.getRawAndEntities(),
+            this.courseModuleRepo.find({
+                where: { course: { id: courseId } },
+                order: { order: 'ASC' },
+                skip: (page - 1) * limit,
+                take: limit
+            }),
             this.courseModuleRepo.count({ where: { course: { id: courseId } } })
         ]);
 
-        const data = modules.entities.map((module, index) => ({
-            id: module.id,
-            course_id: courseId,
-            title: module.title,
-            description: module.description,
-            order: module.order,
-            pdf_content: module.pdf_content,
-            video_content: module.video_content,
-            is_completed: modules.raw[index]?.is_completed === 'true' || modules.raw[index]?.is_completed === true,
-            created_at: module.created_at,
-            updated_at: module.updated_at
+        // For each module, check if it's completed by the user (if authenticated)
+        const data = await Promise.all(modules.map(async (module) => {
+            let isCompleted = false;
+            
+            if (userId) {
+                const progress = await this.userProgressRepo.findOne({
+                    where: {
+                        user: { id: userId },
+                        module: { id: module.id }
+                    }
+                });
+                isCompleted = !!progress;
+            }
+            
+            return {
+                id: module.id,
+                course_id: courseId,
+                title: module.title,
+                description: module.description,
+                order: module.order,
+                pdf_content: module.pdf_content,
+                video_content: module.video_content,
+                is_completed: isCompleted,
+                created_at: module.created_at,
+                updated_at: module.updated_at
+            };
         }));
 
         const totalPages = Math.ceil(total / limit);
@@ -436,6 +510,30 @@ export class CourseService {
     return this.courseRepo.save(course);
     }
 
+    async updateWithFiles(
+        id: string, 
+        data: { title?: string; description?: string; instructor?: string; price?: number }, 
+        files?: { thumbnail_image?: any[] }
+    ) {
+        const course = await this.courseRepo.findOneBy({ id });
+        if (!course) throw new NotFoundException('Course not found');
+
+        // Handle thumbnail upload
+        if (files?.thumbnail_image?.[0]) {
+            console.log('🖼️ Uploading thumbnail image:', files.thumbnail_image[0].originalname);
+            const uploadResult = await this.uploadService.uploadFile(files.thumbnail_image[0], 'images');
+            course.thumbnail_image = uploadResult.url;
+        }
+
+        // Update other fields
+        if (data.title !== undefined) course.title = data.title;
+        if (data.description !== undefined) course.description = data.description;
+        if (data.instructor !== undefined) course.instructor = data.instructor;
+        if (data.price !== undefined) course.price = data.price;
+
+        return await this.courseRepo.save(course);
+    }
+
     async delete(id: string) {
     const course = await this.courseRepo.findOneBy({ id });
     if (!course) throw new NotFoundException('Course not found');
@@ -490,11 +588,13 @@ export class CourseService {
 
         // Handle file uploads
         if (files?.pdf_content?.[0]) {
-            module.pdf_content = `uploads/pdf/${Date.now()}_${files.pdf_content[0].originalname}`;
+            const uploadResult = await this.uploadService.uploadFile(files.pdf_content[0], 'pdfs');
+            module.pdf_content = uploadResult.url;
         }
 
         if (files?.video_content?.[0]) {
-            module.video_content = `uploads/video/${Date.now()}_${files.video_content[0].originalname}`;
+            const uploadResult = await this.uploadService.uploadFile(files.video_content[0], 'videos');
+            module.video_content = uploadResult.url;
         }
 
         // Update other fields
@@ -520,42 +620,52 @@ export class CourseService {
     }
 
     // Get course details with all modules included
-    async findByIdWithModules(id: string, userId?: string) {
-        const course = await this.courseRepo.createQueryBuilder('course')
-            .leftJoinAndSelect('course.modules', 'module')
-            .where('course.id = :id', { id })
-            .orderBy('module.order', 'ASC')
-            .getOne();
+    async findByIdWithModules(id: string): Promise<Course | null> {
+    return this.courseRepo.findOne({
+      where: { id },
+      relations: ['modules'],
+    });
+  }
 
-        if (!course) {
-            throw new NotFoundException('Course not found');
-        }
+  // Get course details with modules and completion status for a user
+  async findByIdWithModulesAndProgress(id: string, userId: string): Promise<Course | null> {
+    const course = await this.courseRepo.findOne({
+      where: { id },
+      relations: ['modules'],
+    });
 
-        // If userId is provided, get completion status for each module
-        if (userId && course.modules) {
-            const moduleIds = course.modules.map(m => m.id);
-            
-            const completedModules = await this.userProgressRepo.find({
-                where: {
-                    user: { id: userId },
-                    module: { id: In(moduleIds) }
-                },
-                relations: ['module']
-            });
-
-            const completedModuleIds = new Set(completedModules.map(p => p.module.id));
-            
-            course.modules = course.modules.map(module => ({
-                ...module,
-                is_completed: completedModuleIds.has(module.id)
-            })) as any;
-        }
-
-        return {
-            ...course,
-            total_modules: course.modules ? course.modules.length : 0
-        };
+    if (!course || !userId) {
+      return course;
     }
+
+    // Sort modules by order
+    course.modules.sort((a, b) => a.order - b.order);
+
+    // Get completion status for each module
+    for (const module of course.modules) {
+      const progress = await this.userProgressRepo.findOne({
+        where: {
+          user: { id: userId },
+          module: { id: module.id }
+        }
+      });
+      
+      // Add completion status to module
+      (module as any).is_completed = !!progress;
+    }
+
+    return course;
+  }
+
+  async hasUserPurchasedCourse(userId: string, courseId: string): Promise<boolean> {
+    const userCourse = await this.userCourseRepo.findOne({
+      where: {
+        user: { id: userId },
+        course: { id: courseId }
+      }
+    });
+    return !!userCourse;
+  }
 
     // Get the next module to study (first incomplete or first module)
     async getNextModuleToStudy(courseId: string, userId: string): Promise<string | null> {
@@ -623,12 +733,19 @@ export class CourseService {
         
         const nextModuleId = await this.getNextModuleToStudy(courseId, userId);
 
+        // Generate certificate URL if course is 100% complete
+        let certificateUrl: string | null = null;
+        if (progressPercentage === 100) {
+            certificateUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/certificates/${userId}/${courseId}`;
+        }
+
         return {
             total_modules: totalModules,
             completed_modules: completedModules,
             progress_percentage: progressPercentage,
             next_module_id: nextModuleId,
-            is_completed: progressPercentage === 100
+            is_completed: progressPercentage === 100,
+            certificate_url: certificateUrl
         };
     }
 

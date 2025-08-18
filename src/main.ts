@@ -14,6 +14,14 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   
+  // Enable CORS
+  app.enableCors({
+    origin: true, // Allow all origins
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+    credentials: true, // Allow cookies to be sent
+  });
+  
   // View engine - handle both development and production paths
   let viewsPath: string;
   
@@ -40,18 +48,6 @@ async function bootstrap() {
   handlebars.registerHelper('add', (a, b) => parseInt(a) + parseInt(b));
   handlebars.registerHelper('subtract', (a, b) => parseInt(a) - parseInt(b));
   handlebars.registerHelper('multiply', (a, b) => parseInt(a) * parseInt(b));
-  handlebars.registerHelper('isDbAdmin', (currentPage) => {
-    const dbAdminPages = [
-      'database-dashboard', 
-      'database-users', 
-      'database-courses', 
-      'database-modules', 
-      'database-purchases', 
-      'database-progress', 
-      'database-user-detail'
-    ];
-    return dbAdminPages.includes(currentPage);
-  });
   handlebars.registerHelper('range', (start: number, end: number) => {
     const result: number[] = [];
     for (let i = start; i < end; i++) {
@@ -81,6 +77,16 @@ async function bootstrap() {
   });
 
   app.use(cookieParser());
+
+  // Serve static files from uploads directory
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
+
+  // Serve static files from static directory (for course thumbnails, etc.)
+  app.useStaticAssets(join(__dirname, '..', 'static'), {
+    prefix: '/static/',
+  });
 
   // Swagger setup
   const config = new DocumentBuilder()

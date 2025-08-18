@@ -17,7 +17,6 @@
             color: #333;
         }
         
-        {{#unless (isDbAdmin currentPage)}}
         .container {
             display: flex;
             min-height: 100vh;
@@ -233,24 +232,9 @@
         .btn-success:hover {
             background-color: #229954;
         }
-        {{/unless}}
-        
-        /* Database Admin specific styles */
-        {{#if (isDbAdmin currentPage)}}
-        .database-admin-container {
-            width: 100%;
-            min-height: 100vh;
-        }
-        {{/if}}
     </style>
 </head>
 <body>
-    {{#if (isDbAdmin currentPage)}}
-    <!-- Database Admin Layout -->
-    <div class="database-admin-container">
-        {{{body}}}
-    </div>
-    {{else}}
     <!-- Regular Grocademy Layout -->
     <div class="container">
         <nav class="sidebar">
@@ -271,11 +255,6 @@
             <ul class="nav-menu">
                 {{#if username}}
                 <li class="nav-item">
-                    <a href="/dashboard" class="nav-link {{#if (eq currentPage 'dashboard')}}active{{/if}}">
-                        🏠 Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a href="/browse" class="nav-link {{#if (eq currentPage 'browse')}}active{{/if}}">
                         📚 Browse Courses
                     </a>
@@ -285,23 +264,6 @@
                         📖 My Courses
                     </a>
                 </li>
-                
-                <!-- Admin Section (only show if user has admin field set) -->
-                {{#if is_admin}}
-                <div class="nav-section">
-                    <div class="nav-section-title">Admin</div>
-                    <li class="nav-item">
-                        <a href="/admin" class="nav-link {{#if (eq currentPage 'admin')}}active{{/if}}">
-                            ⚙️ Admin Panel
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/admin/database" class="nav-link {{#if (isDbAdmin currentPage)}}active{{/if}}">
-                            🗃️ Database Admin
-                        </a>
-                    </li>
-                </div>
-                {{/if}}
                 {{else}}
                 <li class="nav-item">
                     <a href="/login" class="nav-link {{#if (eq currentPage 'login')}}active{{/if}}">
@@ -340,6 +302,5 @@
             </div>
         </main>
     </div>
-    {{/if}}
 </body>
 </html>

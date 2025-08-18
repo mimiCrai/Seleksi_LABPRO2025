@@ -1,0 +1,12 @@
+<svg width="400" height="200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200">
+  <rect width="400" height="200" fill="#1b4332"/>
+  <rect x="30" y="40" width="340" height="120" fill="#2d6a4f" rx="8"/>
+  <text x="200" y="80" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#ffffff" font-weight="bold">Database</text>
+  <text x="200" y="100" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#d8f3dc">SQL Mastery Course</text>
+  <text x="200" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#b7e4c7">Master Database Design</text>
+  <rect x="60" y="65" width="15" height="10" fill="#40916c"/>
+  <rect x="80" y="65" width="15" height="10" fill="#52b788"/>
+  <rect x="100" y="65" width="15" height="10" fill="#74c69d"/>
+  <rect x="300" y="50" width="60" height="40" fill="#95d5b2" rx="4"/>
+  <text x="330" y="70" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#1b4332" font-weight="bold">SQL</text>
+</svg>
