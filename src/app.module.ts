@@ -8,6 +8,7 @@ import { CourseModule } from './course/course.module';
 import { DatabaseModule } from './database/database.module';
 import { UploadModule } from './upload/upload.module';
 import { CertificateModule } from './certificate/certificate.module';
+import { AdminModule } from './admin/admin.module';
 import { AppController } from './app.controller';
 import { HealthService } from './health.service';
 import { HttpModule } from '@nestjs/axios';
@@ -28,6 +29,7 @@ import { getDatabaseConfig } from './config/database.config';
     DatabaseModule, // Contains DatabaseController and all its entity imports
     UploadModule, // File upload handling
     CertificateModule, // Certificate generation and download
+    AdminModule, // Admin endpoints including seeding
     HttpModule,
   ],
   controllers: [AppController],
