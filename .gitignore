@@ -16,7 +16,7 @@ lerna-debug.log*
 .DS_Store
 
 # Environment files
-# .env
+.env
 .env.local
 .env.docker
 
