@@ -60,18 +60,21 @@ export class AuthController {
     const origin = req.get('Origin') || req.get('Referer') || '';
     const isExternalRequest = origin.includes('labpro-ohl-2025-fe.hmif.dev');
     
+    // Check if force parameter is provided to bypass redirect
+    const forceLogin = req.query.force === 'true';
+    
     // If request comes from external frontend, check for admin privileges
     if (isExternalRequest) {
       const token = req.cookies?.token;
       
-      if (token) {
+      if (token && !forceLogin) {
         try {
           // Verify and decode the token
           const decoded = this.jwtService.verify(token);
           
           // If user is already logged in and is admin, redirect to dashboard
           if (decoded.is_admin) {
-            return res.redirect('/dashboard');
+            return res.redirect('/browse');
           }
           
           // If user is logged in but not admin, deny access to login page
@@ -88,11 +91,11 @@ export class AuthController {
     } else {
       // Request from own website - check if already logged in and redirect
       const token = req.cookies?.token;
-      if (token) {
+      if (token && !forceLogin) {
         try {
           const decoded = this.jwtService.verify(token);
           // Redirect to dashboard if already logged in (regardless of admin status)
-          return res.redirect('/dashboard');
+          return res.redirect('/browse');
         } catch (error) {
           // Token is invalid, continue to show login page
         }
@@ -139,7 +142,7 @@ export class AuthController {
 
       // Simpan token di cookie
       res.cookie('token', result.data.token, { httpOnly: true });
-      return res.redirect('/dashboard');
+      return res.redirect('/browse');
     } else {
       return res.render('login', { 
         pageTitle: 'Login',

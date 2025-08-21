@@ -42,18 +42,9 @@ export class CoursePagesController {
       // Get user if logged in
       if (token) {
         try {
-          const userRes = await firstValueFrom(
-            this.http.get('http://api.railway.internal:3000/api/auth/self', {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }),
-          );
-          // Extract user data from the new response format
-          const responseData = userRes.data;
-          if (responseData.status === 'success' && responseData.data) {
-            user = responseData.data;
-          }
+          // Verify and decode the token directly
+          const decoded = this.jwtService.verify(token);
+          user = await this.userService.findById(decoded.sub);
         } catch (error) {
           // User not authenticated, continue without user data
           console.log('User not authenticated, showing public view');
