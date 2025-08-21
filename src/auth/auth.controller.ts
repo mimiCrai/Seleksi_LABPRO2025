@@ -69,9 +69,9 @@ export class AuthController {
           // Verify and decode the token
           const decoded = this.jwtService.verify(token);
           
-          // If user is already logged in and is admin, redirect to browse
+          // If user is already logged in and is admin, redirect to dashboard
           if (decoded.is_admin) {
-            return res.redirect('/browse');
+            return res.redirect('/dashboard');
           }
           
           // If user is logged in but not admin, deny access to login page
@@ -91,8 +91,8 @@ export class AuthController {
       if (token) {
         try {
           const decoded = this.jwtService.verify(token);
-          // Redirect to browse if already logged in (regardless of admin status)
-          return res.redirect('/browse');
+          // Redirect to dashboard if already logged in (regardless of admin status)
+          return res.redirect('/dashboard');
         } catch (error) {
           // Token is invalid, continue to show login page
         }
@@ -139,7 +139,7 @@ export class AuthController {
 
       // Simpan token di cookie
       res.cookie('token', result.data.token, { httpOnly: true });
-      return res.redirect('/browse');
+      return res.redirect('/dashboard');
     } else {
       return res.render('login', { 
         pageTitle: 'Login',
