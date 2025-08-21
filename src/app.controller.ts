@@ -13,4 +13,11 @@ export class AppController {
   async healthCheck() {
     return await this.healthService.checkHealth();
   }
+
+  @Get('health')
+  @ApiOperation({ summary: 'Dedicated /health endpoint for Railway' })
+  @ApiResponse({ status: 200, description: 'Healthcheck OK' })
+  health() {
+    return { status: 'ok' };
+  }
 }
