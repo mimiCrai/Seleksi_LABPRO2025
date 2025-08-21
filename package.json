@@ -25,7 +25,6 @@
     "migration:revert": "npm run typeorm -- -d src/data-source.ts migration:revert",
     "seed": "ts-node src/database/seeds/run-seeders.ts",
     "seed:prod": "node dist/database/seeds/production-seeder.js",
-    "postbuild": "npm run seed:prod",
     "db:reset": "npm run migration:revert && npm run migration:run && npm run seed",
     "db:fresh": "npm run migration:run && npm run seed",
     "docker:up": "docker-compose -f docker/docker-compose.yml up --build",

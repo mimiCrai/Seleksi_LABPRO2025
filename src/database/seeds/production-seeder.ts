@@ -14,7 +14,14 @@ import { UserCourse } from '../../user/entities/user/user-course';
 import { UserProgress } from '../../user/entities/user/user-progress';
 
 async function runProductionSeeders() {
+  console.log('🚀 Starting production database seeding...');
+  console.log('Environment check:');
+  console.log('MYSQL_URL:', process.env.MYSQL_URL ? 'Set' : 'Not set');
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  
   const config = getDatabaseConfig();
+  console.log('Database config type:', typeof config);
+  console.log('Database config keys:', Object.keys(config));
   
   // Create data source with entities for production
   const dataSource = new DataSource({
