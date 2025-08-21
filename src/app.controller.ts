@@ -18,6 +18,6 @@ export class AppController {
   @ApiOperation({ summary: 'Dedicated /health endpoint for Railway' })
   @ApiResponse({ status: 200, description: 'Healthcheck OK' })
   health() {
-    return { status: 'ok' };
+    return { status: '200 OK' };
   }
 }

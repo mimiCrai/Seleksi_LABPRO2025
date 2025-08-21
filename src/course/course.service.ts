@@ -141,7 +141,7 @@ export class CourseService {
                 // Generate certificate URL if course is 100% complete
                 let certificateUrl: string | null = null;
                 if (progress === 100) {
-                    certificateUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/certificates/${userId}/${uc.course.id}`;
+                    certificateUrl = `${process.env.BASE_URL || 'http://api.railway.internal:3000'}/certificates/${userId}/${uc.course.id}`;
                 }
                 
                 return {
@@ -463,7 +463,7 @@ export class CourseService {
         // Generate certificate URL if 100% complete
         let certificateUrl: string | null = null;
         if (percentage === 100) {
-            certificateUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/certificates/${userId}/${module.course.id}`;
+            certificateUrl = `${process.env.BASE_URL || 'http://api.railway.internal:3000'}/certificates/${userId}/${module.course.id}`;
         }
 
         return {
@@ -736,7 +736,7 @@ export class CourseService {
         // Generate certificate URL if course is 100% complete
         let certificateUrl: string | null = null;
         if (progressPercentage === 100) {
-            certificateUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/certificates/${userId}/${courseId}`;
+            certificateUrl = `${process.env.BASE_URL || 'http://api.railway.internal:3000'}/certificates/${userId}/${courseId}`;
         }
 
         return {

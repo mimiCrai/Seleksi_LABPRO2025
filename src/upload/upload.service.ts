@@ -11,7 +11,7 @@ export class UploadService {
   constructor() {
     // Create uploads directory structure
     this.uploadDir = path.join(process.cwd(), 'uploads');
-    this.baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    this.baseUrl = process.env.BASE_URL || 'http://api.railway.internal:3000';
     
     this.ensureDirectoryExists(this.uploadDir);
     this.ensureDirectoryExists(path.join(this.uploadDir, 'images'));

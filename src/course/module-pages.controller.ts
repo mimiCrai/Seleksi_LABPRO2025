@@ -34,7 +34,7 @@ export class ModulePagesController {
     try {
       // Get module details (includes completion status)
       const moduleRes = await firstValueFrom(
-        this.http.get(`http://localhost:3000/api/modules/${moduleId}`, {
+        this.http.get(`http://api.railway.internal:3000/api/modules/${moduleId}`, {
           headers: { Authorization: `Bearer ${req.cookies.token}` },
         }),
       );

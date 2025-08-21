@@ -43,7 +43,7 @@ export class CoursePagesController {
       if (token) {
         try {
           const userRes = await firstValueFrom(
-            this.http.get('http://localhost:3000/api/auth/self', {
+            this.http.get('http://api.railway.internal:3000/api/auth/self', {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
