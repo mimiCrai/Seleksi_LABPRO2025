@@ -4,7 +4,13 @@ export function getDatabaseConfig(): TypeOrmModuleOptions {
   // Railway provides MYSQL_URL, local development uses individual variables
   const mysqlUrl = process.env.MYSQL_URL;
   
+  console.log('Database Config Debug:');
+  console.log('MYSQL_URL:', mysqlUrl ? 'Set' : 'Not set');
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('DB_HOST:', process.env.DB_HOST);
+  
   if (mysqlUrl) {
+    console.log('Using MYSQL_URL connection');
     // Parse Railway's MySQL URL format: mysql://user:password@host:port/database
     return {
       type: 'mysql',
@@ -15,6 +21,7 @@ export function getDatabaseConfig(): TypeOrmModuleOptions {
     };
   }
 
+  console.log('Using individual DB variables');
   // Fallback to individual environment variables (for local development)
   return {
     type: 'mysql',
