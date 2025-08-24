@@ -26,6 +26,10 @@ EXPOSE 3000
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nestjs -u 1001
 
+# Create upload directories with proper permissions
+RUN mkdir -p /app/uploads/images /app/uploads/videos /app/uploads/pdfs
+RUN mkdir -p /app/static
+
 # Change ownership of the working directory
 RUN chown -R nestjs:nodejs /app
 USER nestjs

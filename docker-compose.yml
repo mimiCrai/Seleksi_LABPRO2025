@@ -36,6 +36,8 @@ services:
       DB_PASSWORD: grocademy_password
       DB_NAME: grocademy_db
       JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
+      AUTO_SEED: "true"  # Set to "false" after initial deployment
+      BASE_URL: http://localhost:3000
     ports:
       - "3000:3000"
     depends_on:
