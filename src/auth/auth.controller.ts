@@ -1,8 +1,9 @@
-import { Controller, Post, Body, Get, UseGuards, Req, Render, Res } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Req, Render, Res, ValidationPipe } from '@nestjs/common';
 import { ApiOperation, ApiBody, ApiResponse, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
+import { RegisterDto, LoginDto } from './dto';
 import type { Response } from 'express';
 
 @Controller()
@@ -26,21 +27,10 @@ export class AuthController {
 
   @Post('register')
   @ApiOperation({ summary: 'Register a new user (form)' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        username: { type: 'string' },
-        email: { type: 'string' },
-        password: { type: 'string' }
-      },
-      required: ['username', 'email', 'password']
-    }
-  })
   @ApiResponse({ status: 201, description: 'User registered successfully' })
   @ApiResponse({ status: 400, description: 'Validation error' })
-  async doRegister(@Body() body: any, @Res() res: Response) {
-    const result = await this.authService.register(body);
+  async doRegister(@Body() registerDto: RegisterDto, @Res() res: Response) {
+    const result = await this.authService.register(registerDto);
     
     if (result.status === 'success') {
       return res.redirect('/login');
@@ -111,24 +101,14 @@ export class AuthController {
 
   @Post('login')
   @ApiOperation({ summary: 'Login (form)' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        identifier: { type: 'string' },
-        password: { type: 'string' }
-      },
-      required: ['identifier', 'password']
-    }
-  })
   @ApiResponse({ status: 200, description: 'Login successful' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  async doLogin(@Body() body: any, @Req() req: any, @Res() res: Response) {
+  async doLogin(@Body() loginDto: LoginDto, @Req() req: any, @Res() res: Response) {
     // Get the origin or referer to check where the request is coming from
     const origin = req.get('Origin') || req.get('Referer') || '';
     const isExternalRequest = origin.includes('labpro-ohl-2025-fe.hmif.dev');
     
-    const result = await this.authService.login(body.identifier, body.password);
+    const result = await this.authService.login(loginDto.identifier, loginDto.password);
     
     if (result.status === 'success' && result.data) {
       // If request comes from external frontend, check for admin privileges

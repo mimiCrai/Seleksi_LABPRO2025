@@ -13,14 +13,16 @@ export class SeedUsers {
       return;
     }
 
-    const hashedPassword = await bcrypt.hash('password123', 10);
+    // Different passwords for different users
+    const adminPassword = await bcrypt.hash('admin123', 10);
+    const regularPassword = await bcrypt.hash('password123', 10);
 
     const users = [
       {
         id: '550e8400-e29b-41d4-a716-446655440001',
         username: 'admin',
         email: 'admin@grocademy.com',
-        password: hashedPassword,
+        password: adminPassword, // Using admin123
         first_name: 'Admin',
         last_name: 'User',
         balance: 10000,
@@ -30,7 +32,7 @@ export class SeedUsers {
         id: '550e8400-e29b-41d4-a716-446655440002',
         username: 'testuser',
         email: 'test@example.com',
-        password: hashedPassword,
+        password: regularPassword, // Using password123
         first_name: 'Test',
         last_name: 'User',
         balance: 5000,
@@ -40,7 +42,7 @@ export class SeedUsers {
         id: '550e8400-e29b-41d4-a716-446655440003',
         username: 'johndoe',
         email: 'john.doe@example.com',
-        password: hashedPassword,
+        password: regularPassword,
         first_name: 'John',
         last_name: 'Doe',
         balance: 3000,
@@ -50,7 +52,7 @@ export class SeedUsers {
         id: '550e8400-e29b-41d4-a716-446655440004',
         username: 'janedoe',
         email: 'jane.doe@example.com',
-        password: hashedPassword,
+        password: regularPassword,
         first_name: 'Jane',
         last_name: 'Doe',
         balance: 7500,
@@ -60,7 +62,7 @@ export class SeedUsers {
         id: '550e8400-e29b-41d4-a716-446655440005',
         username: 'student1',
         email: 'student1@example.com',
-        password: hashedPassword,
+        password: regularPassword,
         first_name: 'Alice',
         last_name: 'Johnson',
         balance: 2000,

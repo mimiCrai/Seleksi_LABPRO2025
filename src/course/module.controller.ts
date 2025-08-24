@@ -4,6 +4,7 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { CourseService } from './course.service';
 import { AuthGuard } from '@nestjs/passport';
 import { AdminGuard } from '../auth/admin.guard';
+import { CreateModuleDto, UpdateModuleDto, ReorderModulesDto } from './dto';
 
 @Controller('api')
 @ApiTags('Modules')
@@ -60,12 +61,12 @@ export class ModuleController {
   ]))
   async addModule(
     @Param('courseId') courseId: string,
-    @Body() body: { title: string; description: string },
+    @Body() createModuleDto: CreateModuleDto,
     @UploadedFiles() files: { pdf_content?: any[], video_content?: any[] }
   ) {
     const savedModule = await this.courseService.addModuleToCourse(
       courseId, 
-      { title: body.title, description: body.description }, 
+      { title: createModuleDto.title, description: createModuleDto.description }, 
       files
     );
     
@@ -140,9 +141,9 @@ export class ModuleController {
   @UseGuards(AuthGuard('jwt'), AdminGuard)
   async reorderModules(
     @Param('courseId') courseId: string,
-    @Body() body: { module_order: { id: string; order: number }[] }
+    @Body() reorderModulesDto: ReorderModulesDto
   ) {
-    const result = await this.courseService.reorderModules(courseId, body.module_order);
+    const result = await this.courseService.reorderModules(courseId, reorderModulesDto.modules);
     return {
       status: 'success',
       message: 'Modules reordered successfully',
@@ -331,10 +332,15 @@ export class ModuleController {
   ]))
   async updateModule(
     @Param('id') id: string, 
-    @Body() body: { title: string; description: string },
+    @Body() updateModuleDto: UpdateModuleDto,
     @UploadedFiles() files: { pdf_content?: any[], video_content?: any[] }
   ) {
-    const module = await this.courseService.updateModuleWithFiles(id, body, files);
+    // Create object with only defined fields for service compatibility
+    const moduleData: { title?: string; description?: string } = {};
+    if (updateModuleDto.title !== undefined) moduleData.title = updateModuleDto.title;
+    if (updateModuleDto.description !== undefined) moduleData.description = updateModuleDto.description;
+    
+    const module = await this.courseService.updateModuleWithFiles(id, moduleData as { title: string; description: string }, files);
     return {
       status: 'success',
       message: 'Module updated successfully',

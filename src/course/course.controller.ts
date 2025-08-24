@@ -4,8 +4,7 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { CourseService } from './course.service';
 import { Course } from './entities/course/course';
 import { AuthGuard } from '@nestjs/passport';
-
-import { UpdateCourseDto } from './dto/update-course.dto';
+import { CreateCourseDto, UpdateCourseDto, BuyCourseDto } from './dto';
 
 
 @Controller('api/courses')
@@ -14,27 +13,13 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 export class CourseController {
   constructor(private readonly courseService: CourseService) {}
 
-  // Create course endpoint - now available to all authenticated users
+    // Create course endpoint - now available to all authenticated users
   @Post()
   @ApiOperation({ summary: 'Create a new course' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        title: { type: 'string' },
-        description: { type: 'string' },
-        instructor: { type: 'string' },
-        topics: { type: 'array', items: { type: 'string' } },
-        price: { type: 'number' },
-        thumbnail_image: { type: 'string' }
-      },
-      required: ['title', 'description', 'instructor', 'price']
-    }
-  })
   @ApiResponse({ status: 201, description: 'Course created successfully' })
   @UseGuards(AuthGuard('jwt'))
-  create(@Body() body: Partial<Course>) {
-    return this.courseService.create(body);
+  create(@Body() createCourseDto: CreateCourseDto) {
+    return this.courseService.create(createCourseDto);
   }
 
 
@@ -269,10 +254,10 @@ export class CourseController {
   ]))
   async updateCourse(
     @Param('id') id: string, 
-    @Body() body: { title?: string; description?: string; instructor?: string; price?: number },
+    @Body() updateCourseDto: UpdateCourseDto,
     @UploadedFiles() files: { thumbnail_image?: any[] }
   ) {
-    const course = await this.courseService.updateWithFiles(id, body, files);
+    const course = await this.courseService.updateWithFiles(id, updateCourseDto, files);
     return {
       status: 'success',
       message: 'Course updated successfully',

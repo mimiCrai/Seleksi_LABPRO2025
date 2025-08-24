@@ -24,6 +24,7 @@ import {
 import { UserService } from './user.service';
 import { AuthGuard } from '@nestjs/passport';
 import { AdminGuard } from '../auth/admin.guard';
+import { TopUpBalanceDto } from './dto';
 
 @Controller('api/users')
 @ApiTags('👥 User Management (Admin Only)')
@@ -275,9 +276,9 @@ export class UserApiController {
   })
   async updateUserBalance(
     @Param('id') id: string,
-    @Body() body: { increment: number }
+    @Body() topUpBalanceDto: TopUpBalanceDto
   ) {
-    return this.userService.incrementBalance(id, body.increment);
+    return this.userService.incrementBalance(id, topUpBalanceDto.amount);
   }
 
   @Put(':id')
