@@ -3,6 +3,7 @@
 ## 👤 Identitas Diri
 
 **Nama:** Aloisius Adrian Stevan Gunawan
+
 **NIM:** 13523054
 
 ---
@@ -47,41 +48,30 @@ npm run start:prod
 
 ## 🎯 Design Pattern yang Digunakan
 
-### 1. **Model-View-Controller (MVC)**
-- **Alasan:** Memisahkan logika bisnis, presentasi, dan kontrol aplikasi untuk maintainability yang lebih baik
-- **Implementasi:** 
-  - **Model:** Entitas TypeORM (`src/*/entities/`)
-  - **View:** Template Handlebars (`views/`)
-  - **Controller:** NestJS Controllers (`src/*/*.controller.ts`)
-
-### 2. **Repository Pattern**
+### 1. **Repository Pattern**
 - **Alasan:** Abstraksi akses database dan memudahkan testing dengan mock data
 - **Implementasi:** Service layer yang menggunakan TypeORM Repository
 
-### 3. **Dependency Injection (DI)**
+### 2. **Dependency Injection (DI)**
 - **Alasan:** Loose coupling antar komponen dan memudahkan testing
 - **Implementasi:** NestJS built-in DI container dengan decorators `@Injectable()`
 
-### 4. **Data Transfer Object (DTO)**
+### 3. **Data Transfer Object (DTO)**
 - **Alasan:** Validasi input, type safety, dan dokumentasi API yang konsisten
 - **Implementasi:** Class-based DTOs dengan class-validator (`src/*/dto/`)
 
-### 5. **Guard Pattern**
+### 4. **Guard Pattern**
 - **Alasan:** Centralized authentication dan authorization logic
 - **Implementasi:** 
   - `AuthGuard('jwt')` untuk API authentication
   - `CookieAuthGuard` untuk web page authentication
   - `AdminGuard` untuk admin-only endpoints
 
-### 6. **Module Pattern**
-- **Alasan:** Modular architecture untuk scalability dan separation of concerns
-- **Implementasi:** NestJS Modules (`src/*/*.module.ts`)
-
-### 7. **Interceptor Pattern**
+### 5. **Interceptor Pattern**
 - **Alasan:** Cross-cutting concerns seperti logging, transformation, dan error handling
 - **Implementasi:** File upload interceptors, response transformation
 
-### 8. **Strategy Pattern**
+### 6. **Strategy Pattern**
 - **Alasan:** Multiple authentication strategies (JWT, Local)
 - **Implementasi:** Passport strategies untuk berbagai metode autentikasi
 
@@ -206,21 +196,12 @@ npm run start:prod
 - Link: ![LINK_WEBSITE](https://seleksilabpro2025-production.up.railway.app/login)
 
 ### ✅ 2. **Lighthouse**
-- JWT-based API authentication
-- Cookie-based web authentication  
-- Role-based access control (Admin/User)
-- Secure password hashing dengan bcrypt
+- Link: ![LINK_DOKUMENTASI]([https://seleksilabpro2025-production.up.railway.app/login](https://docs.google.com/document/d/19xC5o46H_d4rRT14rM4-DDzbRIO3z9UDf473tv6V81A/edit?usp=sharing))
 
 ### ✅ 3. **Responsive Layout**
-- AWS S3 integration untuk production
-- Local storage untuk development
-- Multiple file type support (images, PDFs, videos)
-- File upload dengan validation
 
 ### ✅ 4. **Dokumentasi API**
-- Complete OpenAPI/Swagger documentation
-- Interactive API testing interface
-- Automatic schema generation dari DTOs
+- Link: ![LINK_DOKUMENTASI](https://seleksilabpro2025-production.up.railway.app/docs)
 
-## 📸 Screenshot Aplikasi
+
 
