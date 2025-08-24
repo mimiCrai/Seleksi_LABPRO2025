@@ -30,6 +30,7 @@ export class CoursePagesController {
   ) {}
 
   @Get('browse')
+  @UseGuards(CookieAuthGuard)
   @ApiOperation({ summary: 'Show browse courses page' })
   @ApiQuery({ name: 'query', required: false, type: String, description: 'Search query' })
   @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number' })
@@ -94,6 +95,7 @@ export class CoursePagesController {
   }
 
   @Get('courses/:id')
+  @UseGuards(CookieAuthGuard)
   @ApiOperation({ summary: 'Show course details page' })
   @ApiParam({ name: 'id', type: String, description: 'Course ID' })
   @Render('course-details')

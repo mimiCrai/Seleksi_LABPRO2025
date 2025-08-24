@@ -209,6 +209,7 @@ export class CourseController {
   @Put(':id')
   @ApiOperation({ summary: 'Update a course' })
   @ApiConsumes('multipart/form-data')
+  @UseGuards(AuthGuard('jwt'))
   @ApiParam({ name: 'id', type: String, description: 'Course ID' })
   @ApiBody({
     schema: {

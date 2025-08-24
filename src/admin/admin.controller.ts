@@ -1,7 +1,9 @@
-import { Controller, Post, Get } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Controller, Post, Get, UseGuards } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { AdminGuard } from '../auth/admin.guard';
 import { SeedUsers } from '../database/seeds/user.seeder';
 import { SeedCourses } from '../database/seeds/course.seeder';
 import { SeedCourseModules } from '../database/seeds/course-module.seeder';
@@ -10,6 +12,8 @@ import { SeedUserProgress } from '../database/seeds/user-progress.seeder';
 
 @Controller('admin')
 @ApiTags('Admin')
+@ApiBearerAuth()
+@UseGuards(AuthGuard('jwt'), AdminGuard)
 export class AdminController {
   constructor(
     @InjectDataSource()

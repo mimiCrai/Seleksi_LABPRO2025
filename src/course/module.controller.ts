@@ -16,6 +16,7 @@ export class ModuleController {
   @Post('courses/:courseId/modules')
   @ApiOperation({ summary: 'Add module to course (Admin only)' })
   @ApiConsumes('multipart/form-data')
+  @UseGuards(AuthGuard('jwt'), AdminGuard)
   @ApiParam({ name: 'courseId', type: String, description: 'Course ID' })
   @ApiBody({
     schema: {
@@ -244,6 +245,7 @@ export class ModuleController {
   // Get a specific module
   @Get('modules/:id')
   @ApiOperation({ summary: 'Get a specific module' })
+  @UseGuards(AuthGuard('jwt'))
   @ApiParam({ name: 'id', type: String, description: 'Module ID' })
   @ApiResponse({ 
     status: 200, 
