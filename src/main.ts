@@ -5,9 +5,17 @@ import { join } from 'path';
 import cookieParser from 'cookie-parser';
 import * as hbs from 'hbs';
 import { existsSync } from 'fs';
+import { DataSource } from 'typeorm';
 
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+
+// Import seeders for auto-seeding
+import { SeedUsers } from './database/seeds/user.seeder';
+import { SeedCourses } from './database/seeds/course.seeder';
+import { SeedCourseModules } from './database/seeds/course-module.seeder';
+import { SeedUserCourses } from './database/seeds/user-course.seeder';
+import { SeedUserProgress } from './database/seeds/user-progress.seeder';
 
 
 
@@ -109,6 +117,25 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document); // bisa diakses di /docs
+
+  // Auto-seed database if AUTO_SEED environment variable is set
+  if (process.env.AUTO_SEED === 'true') {
+    try {
+      console.log('🌱 AUTO_SEED enabled, running database seeding...');
+      const dataSource = app.get(DataSource);
+      
+      await SeedUsers.run(dataSource);
+      await SeedCourses.run(dataSource);
+      await SeedCourseModules.run(dataSource);
+      await SeedUserCourses.run(dataSource);
+      await SeedUserProgress.run(dataSource);
+      
+      console.log('✅ Auto-seeding completed successfully!');
+    } catch (error) {
+      console.error('❌ Auto-seeding failed:', error);
+      // Don't crash the app if seeding fails
+    }
+  }
 
   const port = process.env.PORT || 3000;
   await app.listen(port, '0.0.0.0');
