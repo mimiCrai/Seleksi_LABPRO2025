@@ -278,7 +278,7 @@ export class UserApiController {
     @Param('id') id: string,
     @Body() topUpBalanceDto: TopUpBalanceDto
   ) {
-    return this.userService.incrementBalance(id, topUpBalanceDto.amount);
+    return this.userService.incrementBalance(id, topUpBalanceDto.increment);
   }
 
   @Put(':id')

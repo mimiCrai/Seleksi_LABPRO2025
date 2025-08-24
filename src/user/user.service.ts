@@ -98,13 +98,26 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
+    // Validate that the resulting balance won't be negative
     const newBalance = user.balance + increment;
+    if (newBalance < 0) {
+      throw new BadRequestException('Insufficient balance. Cannot reduce balance below 0');
+    }
+
     await this.repo.update(userId, { balance: newBalance });
     
-    return this.repo.findOne({ 
+    const updatedUser = await this.repo.findOne({ 
       where: { id: userId },
       select: ['id', 'username', 'balance']
     });
+
+    return {
+      status: 'success',
+      message: increment > 0 ? 
+        `Successfully added ${increment} credits to balance` : 
+        `Successfully deducted ${Math.abs(increment)} credits from balance`,
+      data: updatedUser
+    };
   }
 
   async update(userId: string, updateData: { email?: string; username?: string; first_name?: string; last_name?: string; password?: string }) {

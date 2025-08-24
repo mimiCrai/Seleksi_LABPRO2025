@@ -37,11 +37,9 @@ export class UpdateProfileDto {
 
 export class TopUpBalanceDto {
   @ApiProperty({
-    description: 'Amount to add to balance',
-    example: 100,
-    minimum: 1
+    description: 'Amount to add to balance (use negative values to subtract)',
+    example: 100
   })
   @IsNumber()
-  @Min(1, { message: 'Amount must be at least 1' })
-  amount: number;
+  increment: number;
 }
