@@ -160,7 +160,7 @@ export class CourseService {
   }
 
 
-    async findMyCourses(userId: string) {
+    async findMyCourses(userId: string, page: number = 1, limit: number = 6, search?: string) {
         try {
             const user = await this.userRepo.findOne({
                 where: { id: userId },
@@ -175,7 +175,25 @@ export class CourseService {
                 };
             }
 
-            const data = await Promise.all(user.userCourses.map(async (uc) => {
+            // Filter courses based on search query
+            let filteredUserCourses = user.userCourses;
+            if (search && search.trim()) {
+                const searchLower = search.toLowerCase();
+                filteredUserCourses = user.userCourses.filter(uc => 
+                    uc.course.title.toLowerCase().includes(searchLower) ||
+                    uc.course.instructor.toLowerCase().includes(searchLower) ||
+                    (uc.course.topics && uc.course.topics.some(topic => topic.toLowerCase().includes(searchLower)))
+                );
+            }
+
+            const totalCourses = filteredUserCourses.length;
+            const totalPages = Math.ceil(totalCourses / limit);
+            const offset = (page - 1) * limit;
+
+            // Get paginated courses
+            const paginatedUserCourses = filteredUserCourses.slice(offset, offset + limit);
+
+            const data = await Promise.all(paginatedUserCourses.map(async (uc) => {
                 // Calculate progress percentage
                 const progress = await this.calculateCourseProgress(uc.course.id, userId);
                 
@@ -200,7 +218,16 @@ export class CourseService {
             return {
                 status: 'success',
                 message: 'My courses fetched successfully',
-                data: data
+                data: {
+                    courses: data,
+                    pagination: {
+                        currentPage: page,
+                        totalPages: totalPages,
+                        totalCourses: totalCourses,
+                        hasNextPage: page < totalPages,
+                        hasPrevPage: page > 1
+                    }
+                }
             };
         } catch (error) {
             return {

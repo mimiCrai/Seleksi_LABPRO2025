@@ -281,26 +281,32 @@ export class CoursePagesController {
   @Get('my-courses')
   @UseGuards(CookieAuthGuard)
   @ApiOperation({ summary: 'Show my courses page' })
+  @ApiQuery({ name: 'query', required: false, type: String, description: 'Search query' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number' })
   @Render('my-courses')
-  async myCoursesPage(@Req() req: any) {
+  async myCoursesPage(@Req() req: any, @Query('query') searchQuery?: string, @Query('page') page: string = '1') {
     const user = req.user; // User is attached by the guard
+    const currentPage = parseInt(page) || 1;
+    const limit = 6; // 6 courses per page
 
     try {
-      // Get user's courses from service (now returns standardized format)
-      const myCoursesResult = await this.courseService.findMyCourses(user.id);
+      // Get user's courses with pagination and search from service
+      const myCoursesResult = await this.courseService.findMyCourses(user.id, currentPage, limit, searchQuery);
 
       // Check if the service call was successful
       if (myCoursesResult.status === 'error') {
         throw new Error(myCoursesResult.message);
       }
 
-      const myCourses = myCoursesResult.data || [];
-
-      // Calculate statistics for the template
-      const courseCount = myCourses.length;
-      const inProgressCount = myCourses.filter(course => course.progress_percentage > 0 && course.progress_percentage < 100).length;
-      const completedCount = myCourses.filter(course => course.progress_percentage === 100).length;
-      const certificatesCount = completedCount; // Assuming completed courses have certificates
+      const data = myCoursesResult.data;
+      const courses = data?.courses || [];
+      const pagination = data?.pagination || {
+        currentPage: 1,
+        totalPages: 1,
+        totalCourses: 0,
+        hasNextPage: false,
+        hasPrevPage: false
+      };
 
       return {
         pageTitle: 'My Courses',
@@ -308,11 +314,15 @@ export class CoursePagesController {
         username: user.username,
         balance: user.balance,
         is_admin: user.is_admin || false,
-        courses: myCourses,
-        courseCount,
-        inProgressCount,
-        completedCount,
-        certificatesCount,
+        courses: courses,
+        totalCourses: pagination.totalCourses,
+        page: pagination.currentPage,
+        totalPages: pagination.totalPages,
+        hasNextPage: pagination.hasNextPage,
+        hasPrevPage: pagination.hasPrevPage,
+        query: searchQuery || '',
+        hasResults: courses.length > 0,
+        searchPerformed: !!searchQuery && searchQuery.trim().length > 0,
       };
     } catch (error) {
       console.error('Error fetching my courses:', error.response?.data || error.message);
@@ -323,6 +333,15 @@ export class CoursePagesController {
         balance: user.balance,
         is_admin: user.is_admin || false,
         message: 'Error loading your courses',
+        courses: [],
+        totalCourses: 0,
+        page: 1,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false,
+        query: searchQuery || '',
+        hasResults: false,
+        searchPerformed: !!searchQuery && searchQuery.trim().length > 0,
       };
     }
   }
