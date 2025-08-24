@@ -13,17 +13,20 @@
 ### 🐳 Using Docker (Recommended)
 
 ```bash
-# 1. Start the application
-docker-compose -f docker/docker-compose.yml up --build
+# 1. Start the application (auto-seeds database)
+docker-compose up -d
 
-# 2. Initialize database (first time only)
-docker-compose -f docker/docker-compose.yml exec app npm run migration:run
-docker-compose -f docker/docker-compose.yml exec app npm run seed
-
-# 3. Open your browser
+# 2. Open your browser
 # - App: http://localhost:3000
+# - API Docs: http://localhost:3000/docs
 # - Database Admin: http://localhost:8080
+
+# 3. Login with admin account
+# Username: admin
+# Password: admin123
 ```
+
+📖 **Detailed Docker setup:** See [DOCKER_SETUP.md](DOCKER_SETUP.md)
 
 ### 💻 Local Development
 
