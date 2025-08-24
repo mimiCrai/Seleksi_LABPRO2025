@@ -1,51 +1,57 @@
 {{!-- login.hbs - Extends the main layout --}}
 
 <div class="page-content">
-  {{!-- <div class="page-header">
-    <h1>Login</h1>
-    <p>Welcome back! Please sign in to your account</p>
-  </div> --}}
-
   {{#if error}}
-    <div class="alert alert-error">
+    <div class="alert alert-error" role="alert" aria-live="polite">
       {{error}}
     </div>
   {{/if}}
 
   <div class="form-container">
-    <form method="POST" action="/login" class="form">
-      <div class="form-group">
-        <label for="identifier" class="form-label">Username or Email:</label>
-        <input 
-          type="text" 
-          id="identifier" 
-          name="identifier" 
-          class="form-input"
-          placeholder="Enter your username or email" 
-          required 
-          autofocus
-        />
-      </div>
-      
-      <div class="form-group">
-        <label for="password" class="form-label">Password:</label>
-        <input 
-          type="password" 
-          id="password" 
-          name="password" 
-          class="form-input"
-          placeholder="Enter your password" 
-          required 
-        />
-      </div>
-      
-      <button type="submit" class="btn btn-primary">
-        Login
-      </button>
+    <form method="POST" action="/login" class="form" novalidate>
+      <fieldset>
+        <legend class="sr-only">Login credentials</legend>
+        
+        <div class="form-group">
+          <label for="identifier" class="form-label">Username or Email:</label>
+          <input 
+            type="text" 
+            id="identifier" 
+            name="identifier" 
+            class="form-input"
+            placeholder="Enter your username or email" 
+            required 
+            autofocus
+            aria-describedby="identifier-help"
+            autocomplete="username"
+          />
+          <span id="identifier-help" class="sr-only">Enter your registered username or email address</span>
+        </div>
+        
+        <div class="form-group">
+          <label for="password" class="form-label">Password:</label>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            class="form-input"
+            placeholder="Enter your password" 
+            required 
+            aria-describedby="password-help"
+            autocomplete="current-password"
+          />
+          <span id="password-help" class="sr-only">Enter your account password</span>
+        </div>
+        
+        <button type="submit" class="btn btn-primary" aria-describedby="login-help">
+          Login
+        </button>
+        <span id="login-help" class="sr-only">Submit form to sign in to your account</span>
+      </fieldset>
     </form>
     
     <div class="form-footer">
-      <p>Don't have an account? <a href="/register">Register here</a></p>
+      <p>Don't have an account? <a href="/register" aria-label="Go to registration page">Register here</a></p>
     </div>
   </div>
 </div>

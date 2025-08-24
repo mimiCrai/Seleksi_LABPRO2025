@@ -20,6 +20,13 @@ export class CourseService {
     private uploadService: UploadService,
     ) {}
 
+  /**
+   * Helper method to get thumbnail image or default
+   */
+  private getThumbnailImage(thumbnailImage: string | null): string {
+    return thumbnailImage || '/static/default.jpg';
+  }
+
   async create(data: Partial<Course>) {
     try {
       const course = this.courseRepo.create(data);
@@ -76,7 +83,13 @@ export class CourseService {
     const [data, total] = await query.getManyAndCount();
     const totalPages = Math.ceil(total / limit);
 
-    return { data, total, totalPages };
+    // Add default thumbnails to all courses
+    const coursesWithThumbnails = data.map(course => ({
+      ...course,
+      thumbnail_image: this.getThumbnailImage(course.thumbnail_image)
+    }));
+
+    return { data: coursesWithThumbnails, total, totalPages };
     }
 
     async buyCourse(courseId: string, userId: string) {
@@ -149,7 +162,7 @@ export class CourseService {
                 title: uc.course.title,
                 description: uc.course.description,
                 instructor: uc.course.instructor,
-                thumbnail_image: uc.course.thumbnail_image,
+                thumbnail_image: this.getThumbnailImage(uc.course.thumbnail_image),
                 progress_percentage: progress,
                 purchased_at: uc.purchased_at,
                 certificate_url: certificateUrl,
@@ -195,7 +208,8 @@ export class CourseService {
                 message: 'Course fetched successfully',
                 data: {
                     ...courseData,
-                    total_modules: totalModules
+                    total_modules: totalModules,
+                    thumbnail_image: this.getThumbnailImage(courseData.thumbnail_image)
                 }
             };
         } catch (error) {
@@ -635,8 +649,15 @@ export class CourseService {
     });
 
     if (!course || !userId) {
+      // Add default thumbnail even if no user
+      if (course) {
+        course.thumbnail_image = this.getThumbnailImage(course.thumbnail_image);
+      }
       return course;
     }
+
+    // Add default thumbnail
+    course.thumbnail_image = this.getThumbnailImage(course.thumbnail_image);
 
     // Sort modules by order
     course.modules.sort((a, b) => a.order - b.order);

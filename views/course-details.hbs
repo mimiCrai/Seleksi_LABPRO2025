@@ -2,51 +2,51 @@
 
 <div class="course-details">
   {{#if error}}
-    <div class="alert alert-error">
+    <div class="alert alert-error" role="alert" aria-live="polite">
       <strong>Error:</strong> {{error}}
     </div>
   {{/if}}
 
   {{#if course}}
-    <div class="course-header">
+    <article class="course-header">
       <div class="course-info">
         <h1>{{course.title}}</h1>
         <p class="course-instructor">by {{course.instructor}}</p>
         <p class="course-description">{{course.description}}</p>
         
         {{#if course.topics}}
-          <div class="course-topics">
-            <h3>Topics Covered:</h3>
+          <section class="course-topics">
+            <h2>Topics Covered:</h2>
             <ul class="topics-list">
               {{#each course.topics}}
                 <li>{{this}}</li>
               {{/each}}
             </ul>
-          </div>
+          </section>
         {{/if}}
       </div>
       
-      <div class="course-sidebar">
-        {{#if course.thumbnail_image}}
-          <img src="{{course.thumbnail_image}}" alt="{{course.title}}" class="course-image"
-               onerror="this.src='/static/default-course.jpg'">
-        {{else}}
-          <img src="/static/default-course.jpg" alt="{{course.title}}" class="course-image">
-        {{/if}}
+      <aside class="course-sidebar">
+        <img src="{{#if course.thumbnail_image}}{{course.thumbnail_image}}{{else}}/static/default.jpg{{/if}}" 
+             alt="Course thumbnail for {{course.title}}" 
+             class="course-image"
+             loading="lazy"
+             onerror="this.src='/static/default.jpg'">
         
         <div class="course-price">
-          <span class="price">{{course.price}} credits</span>
+          <span class="price" aria-label="Course price">{{course.price}} credits</span>
         </div>
         
-        <div class="course-stats">
+        <section class="course-stats" aria-labelledby="course-stats-heading">
+          <h3 id="course-stats-heading" class="sr-only">Course Statistics</h3>
           <p><strong>Total Modules:</strong> {{course.total_modules}}</p>
-          <p><strong>Created:</strong> {{formatDate course.created_at}}</p>
+          <p><strong>Created:</strong> <time datetime="{{course.created_at}}">{{formatDate course.created_at}}</time></p>
           {{#if isPurchased}}
             {{#if course.progress_summary}}
               <p><strong>Progress:</strong> {{course.progress_summary.completed_modules}}/{{course.progress_summary.total_modules}} modules ({{course.progress_summary.progress_percentage}}%)</p>
             {{/if}}
           {{/if}}
-        </div>
+        </section>
 
         {{#if isPurchased}}
           {{#if course.progress_summary.next_module_id}}

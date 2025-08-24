@@ -1,39 +1,39 @@
 {{!-- browse.hbs - Extends the main layout --}}
 
-{{!-- <div class="page-content"> --}}
-  {{!-- <div class="page-header">
-    <h1>Browse Courses</h1>
-    <p>Discover and purchase courses to enhance your skills</p>
-  </div> --}}
-
   <div class="search-bar">
-    <form method="GET" action="/browse" class="search-form">
+    <form method="GET" action="/browse" class="search-form" role="search">
+      <label for="course-search" class="sr-only">Search courses</label>
       <input 
         type="text" 
+        id="course-search"
         name="query" 
         class="search-input"
         placeholder="Search courses..." 
         value="{{query}}"
+        aria-describedby="search-help"
       />
-      <button type="submit" class="search-button">🔍 Search</button>
+      <span id="search-help" class="sr-only">Enter keywords to search for courses</span>
+      <button type="submit" class="search-button" aria-label="Search courses">
+        <span aria-hidden="true">🔍</span> Search
+      </button>
     </form>
   </div>
   
 
   {{#if message}}
-    <div class="alert alert-error">
+    <div class="alert alert-error" role="alert" aria-live="polite">
       {{message}}
     </div>
   {{/if}}
 
   {{#if error}}
-    <div class="alert alert-error">
+    <div class="alert alert-error" role="alert" aria-live="polite">
       <strong>Error:</strong> {{error}}
     </div>
   {{/if}}
 
   {{#if searchPerformed}}
-    <div class="search-results-info">
+    <div class="search-results-info" role="status" aria-live="polite">
       {{#if hasResults}}
         <p>Found {{pagination.total_items}} course(s) for "{{query}}"</p>
       {{else}}
@@ -43,13 +43,20 @@
   {{/if}}
 
   {{#if courses}}
-    <div class="courses-grid">
+    <section class="courses-grid" aria-label="Available courses">
       {{#each courses}} 
-        <div class="course-card">
-          <div class="course-header">
-            <h3>{{this.name}}{{this.title}}</h3>
-            <div class="course-price">{{this.price}} credits</div>
+        <article class="course-card">
+          <div class="course-image">
+            <img src="{{#if this.thumbnail_image}}{{this.thumbnail_image}}{{else}}/static/default.jpg{{/if}}" 
+                 alt="{{this.name}}{{this.title}} course thumbnail" 
+                 class="course-thumbnail"
+                 loading="lazy"
+                 onerror="this.src='/static/default.jpg'" />
           </div>
+          <header class="course-header">
+            <h2>{{this.name}}{{this.title}}</h2>
+            <div class="course-price" aria-label="Course price">{{this.price}} credits</div>
+          </header>
           
           <div class="course-body">
             <p class="course-description">{{this.description}}</p>
@@ -58,40 +65,44 @@
             {{/if}}
           </div>
           
-          <div class="course-footer">
-            <a href="/courses/{{this.id}}" class="btn btn-secondary" style="margin-right: 10px;">
-              📋 View Details
+          <footer class="course-footer">
+            <a href="/courses/{{this.id}}" class="btn btn-secondary" style="margin-right: 10px;"
+               aria-label="View details for {{this.name}}{{this.title}}">
+              <span aria-hidden="true">📋</span> View Details
             </a>
             <form action="/buy-course" method="POST" style="display: inline;">
               <input type="hidden" name="courseId" value="{{this.id}}">
-              <button type="submit" class="btn btn-primary">
-                💳 Buy Course
+              <button type="submit" class="btn btn-primary" 
+                      aria-label="Buy {{this.name}}{{this.title}} for {{this.price}} credits">
+                <span aria-hidden="true">💳</span> Buy Course
               </button>
             </form>
-          </div>
-        </div>
+          </footer>
+        </article>
       {{/each}}
-    </div>
+    </section>
 
     {{#if pagination}}
       {{#if (gt pagination.total_pages 1)}}
-        <div class="pagination">
+        <nav class="pagination" aria-label="Course pages navigation">
           {{#if (gt pagination.current_page 1)}}
-            <a href="/browse?page={{subtract pagination.current_page 1}}{{#if query}}&query={{query}}{{/if}}" class="pagination-btn">
+            <a href="/browse?page={{subtract pagination.current_page 1}}{{#if query}}&query={{query}}{{/if}}" 
+               class="pagination-btn" aria-label="Go to previous page">
               ← Previous
             </a>
           {{/if}}
           
-          <span class="pagination-info">
+          <span class="pagination-info" aria-current="page">
             Page {{pagination.current_page}} of {{pagination.total_pages}}
           </span>
           
           {{#if (lt pagination.current_page pagination.total_pages)}}
-            <a href="/browse?page={{add pagination.current_page 1}}{{#if query}}&query={{query}}{{/if}}" class="pagination-btn">
+            <a href="/browse?page={{add pagination.current_page 1}}{{#if query}}&query={{query}}{{/if}}" 
+               class="pagination-btn" aria-label="Go to next page">
               Next →
             </a>
           {{/if}}
-        </div>
+        </nav>
       {{/if}}
     {{/if}}
   {{else}}

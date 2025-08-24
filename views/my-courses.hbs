@@ -69,8 +69,10 @@
       {{#each courses}}
         <div class="course-card" data-course-id="{{this.id}}">
           <div class="course-image">
-            <img src="{{this.thumbnail_image}}" alt="{{this.title}}" 
-                 onerror="this.src='/static/default-course.jpg'">
+            <img src="{{#if this.thumbnail_image}}{{this.thumbnail_image}}{{else}}/static/default.jpg{{/if}}" 
+                 alt="{{this.title}}" 
+                 loading="lazy"
+                 onerror="this.src='/static/default.jpg'">
             <div class="progress-overlay">
               <div class="progress-ring">
                 <svg class="progress-svg" viewBox="0 0 36 36">
