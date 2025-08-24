@@ -30,7 +30,7 @@
         <div class="content-section video-section">
           <h2>📹 Video Content</h2>
           <div class="video-container">
-            <video controls class="module-video">
+            <video controls class="module-video" preload="metadata" loading="lazy">
               <source src="{{module.video_content}}" type="video/mp4">
               Your browser does not support the video tag.
             </video>
@@ -85,14 +85,14 @@
     </div>
 
     <!-- Progress Modal -->
-    <div id="progressModal" class="modal" style="display: none;">
+    <div id="progressModal" class="modal modal-hidden">
       <div class="modal-content">
         <div class="modal-header">
           <h3>🎉 Module Completed!</h3>
         </div>
         <div class="modal-body">
           <div id="progressInfo"></div>
-          <div id="certificateInfo" style="display: none;">
+          <div id="certificateInfo" class="certificate-info-hidden">
             <div class="certificate-celebration">
               <h2>🏆 Congratulations!</h2>
               <p>You've completed the entire course!</p>
@@ -129,64 +129,72 @@
         this.innerHTML = '⏳ Completing...';
 
         try {
-          // Use the API endpoint with cookie credentials (not localStorage token)
+          // Use fetch directly with proper error handling
           const response = await fetch(`/api/modules/${moduleId}/complete`, {
             method: 'PATCH',
-            credentials: 'include', // Include cookies in the request
+            credentials: 'include',
             headers: {
               'Content-Type': 'application/json'
             }
           });
-
-          if (response.ok) {
-            const data = await response.json();
-            
-            if (data.status === 'success') {
-              // Update the page UI to show completion
-              updatePageUIForCompletion();
-              
-              // Show progress information
-              const progress = data.data.course_progress;
-              progressInfo.innerHTML = `
-                <div class="progress-update">
-                  <h4>Progress Updated!</h4>
-                  <div class="progress-stats">
-                    <div class="stat">
-                      <span class="stat-number">${progress.completed_modules}</span>
-                      <span class="stat-label">Completed</span>
-                    </div>
-                    <div class="stat">
-                      <span class="stat-number">${progress.total_modules}</span>
-                      <span class="stat-label">Total</span>
-                    </div>
-                    <div class="stat">
-                      <span class="stat-number">${progress.percentage}%</span>
-                      <span class="stat-label">Progress</span>
-                    </div>
-                  </div>
-                  <div class="progress-bar-container">
-                    <div class="progress-bar-fill" style="width: ${progress.percentage}%"></div>
-                  </div>
-                </div>
-              `;
-
-              // Show certificate if course is completed
-              if (data.data.certificate_url) {
-                certificateDownload.href = data.data.certificate_url;
-                certificateInfo.style.display = 'block';
-              }
-
-              // Show modal
-              progressModal.style.display = 'flex';
-              return;
-            }
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
           }
           
-          // If we get here, something went wrong
-          const errorData = await response.json().catch(() => ({ message: 'Unknown error occurred' }));
-          throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+          const data = await response.json();
+          
+          if (data.status === 'success') {
+            // Update the page UI to show completion
+            updatePageUIForCompletion();
+            
+            // Show progress information
+            const progress = data.data.course_progress;
+            progressInfo.innerHTML = `
+              <div class="progress-update">
+                <h4>Progress Updated!</h4>
+                <div class="progress-stats">
+                  <div class="stat">
+                    <span class="stat-number">${progress.completed_modules}</span>
+                    <span class="stat-label">Completed</span>
+                  </div>
+                  <div class="stat">
+                    <span class="stat-number">${progress.total_modules}</span>
+                    <span class="stat-label">Total</span>
+                  </div>
+                  <div class="stat">
+                    <span class="stat-number">${progress.percentage}%</span>
+                    <span class="stat-label">Progress</span>
+                  </div>
+                </div>
+                <div class="progress-bar-container">
+                  <div class="progress-bar-fill" data-progress="${progress.percentage}"></div>
+                </div>
+              </div>
+            `;
+
+            // Set progress bar width using CSS
+            const progressBar = progressInfo.querySelector('.progress-bar-fill');
+            if (progressBar) {
+              progressBar.style.setProperty('--progress-width', `${progress.percentage}%`);
+            }
+
+            // Show certificate if course is completed
+            if (data.data.certificate_url) {
+              certificateDownload.href = data.data.certificate_url;
+              certificateInfo.classList.remove('certificate-info-hidden');
+              certificateInfo.classList.add('certificate-info-visible');
+            }
+
+            // Show modal
+            progressModal.classList.remove('modal-hidden');
+            progressModal.classList.add('modal-visible');
+          } else {
+            throw new Error(data.message || 'Failed to complete module');
+          }
           
         } catch (error) {
+          console.error('Error completing module:', error);
           alert('Error completing module: ' + error.message);
           // Re-enable button
           this.disabled = false;
@@ -198,8 +206,8 @@
     // Modal close functionality
     if (continueBtn) {
       continueBtn.addEventListener('click', function() {
-        progressModal.style.display = 'none';
-        // No need to reload since we updated the UI dynamically
+        progressModal.classList.remove('modal-visible');
+        progressModal.classList.add('modal-hidden');
       });
     }
 
@@ -207,7 +215,16 @@
     function updatePageUIForCompletion() {
       // Update the completion badge in navigation
       const completionBadge = document.querySelector('.completion-badge');
-      if (completionBadge) {
+      if (!completionBadge) {
+        // Create completion badge if it doesn't exist
+        const moduleNav = document.querySelector('.module-navigation');
+        if (moduleNav) {
+          const badge = document.createElement('div');
+          badge.className = 'completion-badge completed';
+          badge.innerHTML = '✅ Completed';
+          moduleNav.appendChild(badge);
+        }
+      } else {
         completionBadge.innerHTML = '✅ Completed';
         completionBadge.classList.add('completed');
       }
@@ -230,7 +247,8 @@
     // Close modal when clicking outside
     window.addEventListener('click', function(event) {
       if (event.target === progressModal) {
-        progressModal.style.display = 'none';
+        progressModal.classList.remove('modal-visible');
+        progressModal.classList.add('modal-hidden');
       }
     });
   });
@@ -248,6 +266,7 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
+    min-height: 44px; /* Prevent layout shift */
   }
 
   .nav-back {
@@ -270,19 +289,29 @@
     padding: 0.5rem 1rem;
     border-radius: 20px;
     font-weight: 600;
+    min-width: 120px; /* Prevent layout shift */
+    text-align: center;
   }
 
+  .completion-badge.completed {
+    background: #c6f6d5;
+    color: #22543d;
+  }
+
+  /* Module header with optimized spacing */
   .module-header {
     text-align: center;
     margin-bottom: 3rem;
     padding-bottom: 1rem;
     border-bottom: 2px solid #e2e8f0;
+    min-height: 150px; /* Prevent layout shift */
   }
 
   .module-header h1 {
     font-size: 2.5rem;
     margin-bottom: 1rem;
     color: #2d3748;
+    font-display: swap; /* Optimize font loading */
   }
 
   .module-description {
@@ -293,6 +322,7 @@
     margin: 0 auto;
   }
 
+  /* Content sections with reserved space */
   .content-section {
     margin-bottom: 3rem;
     background: white;
@@ -300,25 +330,66 @@
     border-radius: 8px;
     padding: 2rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    min-height: 200px; /* Reserve space to prevent shifts */
   }
 
   .content-section h2 {
     margin-bottom: 1.5rem;
     color: #2d3748;
     font-size: 1.5rem;
+    font-display: swap;
   }
 
+  /* Modal styles to prevent layout shift */
+  .modal-hidden {
+    display: none !important;
+  }
+  
+  .modal-visible {
+    display: flex !important;
+  }
+  
+  .certificate-info-hidden {
+    display: none !important;
+  }
+  
+  .certificate-info-visible {
+    display: block !important;
+  }
+
+  /* Video container with aspect ratio to prevent layout shift */
   .video-container {
     width: 100%;
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    aspect-ratio: 16/9; /* Maintain aspect ratio */
+    background: #f7fafc; /* Placeholder background */
   }
 
   .module-video {
     width: 100%;
-    height: auto;
-    max-height: 500px;
+    height: 100%;
+    object-fit: cover;
+    background: #000; /* Video background */
+  }
+
+  /* Progress bar with CSS variables */
+  .progress-bar-container {
+    width: 100%;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 1rem 0;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4299e1 0%, #3182ce 100%);
+    width: var(--progress-width, 0%);
+    transition: width 0.6s ease-out;
+    border-radius: 4px;
   }
 
   .pdf-link {

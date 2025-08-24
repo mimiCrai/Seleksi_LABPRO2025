@@ -27,6 +27,34 @@ export class CourseService {
     return thumbnailImage || '/static/default.jpg';
   }
 
+  /**
+   * Helper method to get the correct base URL for the application
+   */
+  private getBaseUrl(): string {
+    // Check for explicit BASE_URL environment variable
+    if (process.env.BASE_URL) {
+      return process.env.BASE_URL;
+    }
+
+    // Check for Railway environment
+    if (process.env.RAILWAY_ENVIRONMENT) {
+      // For Railway, construct URL from environment variables
+      const port = process.env.PORT || 3000;
+      const railwayUrl = process.env.RAILWAY_PUBLIC_DOMAIN;
+      
+      if (railwayUrl) {
+        return `https://${railwayUrl}`;
+      }
+      
+      // Fallback for Railway if public domain not available
+      return `https://grocademy-backend-production.up.railway.app`;
+    }
+
+    // Development fallback
+    const port = process.env.PORT || 3000;
+    return `http://localhost:${port}`;
+  }
+
   async create(data: Partial<Course>) {
     try {
       const course = this.courseRepo.create(data);
@@ -154,7 +182,7 @@ export class CourseService {
                 // Generate certificate URL if course is 100% complete
                 let certificateUrl: string | null = null;
                 if (progress === 100) {
-                    certificateUrl = `${process.env.BASE_URL || 'http://api.railway.internal:3000'}/certificates/${userId}/${uc.course.id}`;
+                    certificateUrl = `${this.getBaseUrl()}/certificates/${userId}/${uc.course.id}`;
                 }
                 
                 return {
@@ -477,7 +505,7 @@ export class CourseService {
         // Generate certificate URL if 100% complete
         let certificateUrl: string | null = null;
         if (percentage === 100) {
-            certificateUrl = `${process.env.BASE_URL || 'http://api.railway.internal:3000'}/certificates/${userId}/${module.course.id}`;
+            certificateUrl = `${this.getBaseUrl()}/certificates/${userId}/${module.course.id}`;
         }
 
         return {
@@ -757,7 +785,7 @@ export class CourseService {
         // Generate certificate URL if course is 100% complete
         let certificateUrl: string | null = null;
         if (progressPercentage === 100) {
-            certificateUrl = `${process.env.BASE_URL || 'http://api.railway.internal:3000'}/certificates/${userId}/${courseId}`;
+            certificateUrl = `${this.getBaseUrl()}/certificates/${userId}/${courseId}`;
         }
 
         return {
